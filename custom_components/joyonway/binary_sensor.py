@@ -32,6 +32,7 @@ async def async_setup_entry(
         JoyonwayBinarySensor(coordinator, entry, desc)
         for desc in descriptions
         if desc.platform == "binary_sensor"
+        and (desc.key != "blower_active" or coordinator.has_blower)
     ]
     # Always add bridge connectivity sensor
     entities.append(JoyonwayBridgeConnectivity(coordinator, entry))
@@ -63,6 +64,8 @@ class JoyonwayBinarySensor(JoyonwayCoordinatorEntity, BinarySensorEntity):
 
         if description.device_class == "heat":
             self._attr_device_class = BinarySensorDeviceClass.HEAT
+        elif description.device_class == "running":
+            self._attr_device_class = BinarySensorDeviceClass.RUNNING
 
     @property
     def is_on(self) -> bool | None:

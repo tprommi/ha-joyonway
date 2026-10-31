@@ -123,6 +123,10 @@ def test_parse_status_core_fields(adapter: P20B29Adapter, logical_frame: bytes) 
     assert result["light_color_index"] == 3
     assert result["blower"] is True
     assert result["ozone_active"] is False
+    assert result["circulation_active"] is True
+    assert result["jets_active"] is True
+    assert result["light_active"] is True
+    assert result["blower_active"] is True
     assert "ozone_mode" not in result
     assert "heater_mode" not in result
 
