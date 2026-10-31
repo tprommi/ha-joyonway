@@ -167,6 +167,9 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
         """Return the target (setpoint) temperature."""
         if self._pending_temp is not None:
             return float(self._pending_temp)
+        pv = self.coordinator.pv_heating
+        if (pv.active or pv.restoring_user_target) and pv.user_setpoint is not None:
+            return float(pv.user_setpoint)
         if self.coordinator.data is None:
             return None
         return self.coordinator.data.get("setpoint")
@@ -176,6 +179,8 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
         """Return current HVAC mode based on heater enabled state."""
         if self._pending_hvac_mode is not None:
             return self._pending_hvac_mode
+        if self.coordinator.pv_heating.active:
+            return HVACMode.OFF
         state = self._get_coordinator_heater_state()
         if state is True:
             return HVACMode.HEAT
@@ -230,8 +235,19 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
             raise ManualHeatingDisabled()
 
         if hvac_mode == HVACMode.HEAT:
+            self.coordinator.pv_heating.user_turn_on()
             self._submit_heater_intent(on=True)
         elif hvac_mode == HVACMode.OFF:
+            if self.coordinator.pv_heating.active:
+                self._pending_hvac_mode = None
+                self._cancel_pending_hvac_timeout()
+                self.async_write_ha_state()
+                return
+            if self.coordinator.pv_heating.user_turn_off():
+                self._pending_hvac_mode = None
+                self._cancel_pending_hvac_timeout()
+                self.async_write_ha_state()
+                return
             self._submit_heater_intent(on=False)
 
     def _submit_heater_intent(self, on: bool) -> None:
@@ -282,6 +298,12 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
             self.coordinator.adapter.temp_min_c,
             min(self.coordinator.adapter.temp_max_c, target_c),
         )
+        if self.coordinator.pv_heating.active:
+            await self._async_cancel_debounce_task()
+            self._pending_temp = None
+            self._cancel_pending_timeout()
+            self.coordinator.pv_heating.set_user_setpoint(target_c)
+            return
         self._pending_temp = target_c
         self.async_write_ha_state()
 
@@ -302,6 +324,12 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
                 return
 
             coordinator: JoyonwayCoordinator = self.coordinator
+            coordinator.pv_heating.set_user_setpoint(scheduled_target)
+            if coordinator.pv_heating.active:
+                self._pending_temp = None
+                self._cancel_pending_timeout()
+                self.async_write_ha_state()
+                return
 
             def _build_temp(overrides: dict, data: dict | None) -> bytes | None:
                 target_c = overrides["setpoint"]

@@ -363,6 +363,9 @@ class JoyonwayCoordinator(DataUpdateCoordinator):
         # Intent queue for coalescing and serializing user actions
         self.intent_queue = IntentQueue(self)
         self._on_data_callbacks: list[Callable[[], None]] = []
+        from .pv_heating import PVHeatingController
+
+        self.pv_heating = PVHeatingController(self)
 
         # Clock sync
         self._last_clock_sync_ts = 0.0
@@ -436,6 +439,7 @@ class JoyonwayCoordinator(DataUpdateCoordinator):
     def async_set_updated_data(self, data: Any) -> None:
         """Set new data and notify listeners."""
         super().async_set_updated_data(data)
+        self.pv_heating.on_broadcast()
         for cb in list(self._on_data_callbacks):
             try:
                 cb()

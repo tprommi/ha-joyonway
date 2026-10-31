@@ -452,6 +452,7 @@ async def test_optimistic_timeout_clears_pending_state():
         async_send_command = AsyncMock(return_value=True)
 
     coordinator = QuickCoordinator()
+    coordinator.pv_heating = SimpleNamespace(active=False, user_turn_on=lambda: None)
     coordinator.intent_queue = _DummyIntentQueue(coordinator)
     entry = SimpleNamespace(entry_id="e1", data={CONF_HOST: "127.0.0.1"})
     heater = SpaHeaterSwitch(coordinator, entry)
@@ -498,6 +499,7 @@ async def test_optimistic_timeout_canceled_on_coordinator_update():
         async_send_command = AsyncMock(return_value=True)
 
     coordinator = QuickCoordinator()
+    coordinator.pv_heating = SimpleNamespace(active=False, user_turn_on=lambda: None)
     coordinator.intent_queue = _DummyIntentQueue(coordinator)
     entry = SimpleNamespace(entry_id="e1", data={CONF_HOST: "127.0.0.1"})
     heater = SpaHeaterSwitch(coordinator, entry)
@@ -551,6 +553,7 @@ async def test_pending_timeout_canceled_on_entity_removal():
         async_send_command = AsyncMock(return_value=True)
 
     coordinator = QuickCoordinator()
+    coordinator.pv_heating = SimpleNamespace(active=False, user_turn_on=lambda: None)
     coordinator.intent_queue = _DummyIntentQueue(coordinator)
     entry = SimpleNamespace(entry_id="e1", data={CONF_HOST: "127.0.0.1"})
     heater = SpaHeaterSwitch(coordinator, entry)
