@@ -293,6 +293,48 @@ def celsius_to_fahrenheit(c: int) -> int:
     return round(c * 9 / 5 + 32)
 
 
+def schedule_window_active(data: dict) -> bool | None:
+    """Check whether the spa clock is within any enabled heat or filter slot."""
+    spa_datetime = data.get("spa_datetime")
+    if not isinstance(spa_datetime, datetime):
+        return None
+
+    minute_of_day = spa_datetime.hour * 60 + spa_datetime.minute
+    active = False
+    for schedule_type in ("heat", "filter"):
+        for slot in (1, 2):
+            prefix = f"{schedule_type}_slot{slot}"
+            start = data.get(f"{prefix}_start")
+            end = data.get(f"{prefix}_end")
+            enabled = data.get(f"{prefix}_enabled")
+            if (
+                not isinstance(enabled, bool)
+                or not isinstance(start, tuple)
+                or not isinstance(end, tuple)
+            ):
+                return None
+            if len(start) != 2 or len(end) != 2:
+                return None
+            if not all(isinstance(part, int) for part in (*start, *end)):
+                return None
+            if not (
+                0 <= start[0] < 24
+                and 0 <= end[0] < 24
+                and 0 <= start[1] < 60
+                and 0 <= end[1] < 60
+            ):
+                return None
+            if not enabled:
+                continue
+            start_minute = start[0] * 60 + start[1]
+            end_minute = end[0] * 60 + end[1]
+            if start_minute < end_minute:
+                active |= start_minute <= minute_of_day < end_minute
+            elif start_minute > end_minute:
+                active |= minute_of_day >= start_minute or minute_of_day < end_minute
+    return active
+
+
 class JoyonwayBaseAdapter:
     """Shared base class for Joyonway model adapters."""
 
@@ -410,11 +452,15 @@ class JoyonwayBaseAdapter:
             "light": bool(light_byte & self._mask_light),
             "light_color_index": light_byte & self._mask_light,
             "heater_active": self.heater_state_map.get(heater_base) == "heating",
+            "circulation_active": heating_cycle_active,
+            "jets_active": bool(jet_byte),
+            "light_active": bool(light_byte & self._mask_light),
             "heater_enabled": status in ("standby", "circulation", "heating"),
             "status": status,
             "heater_byte": heater_byte,
             "ozone_active": self.heater_state_map.get(heater_base) == "ozone",
             "blower": bool(heater_byte & MASK_HEATER_BLOWER),
+            "blower_active": bool(heater_byte & MASK_HEATER_BLOWER),
             "heater_byte_raw": heater_byte,
             "jets_byte_raw": jet_byte,
             "ozone_mode_byte_raw": ozone_mode_byte,
@@ -484,6 +530,8 @@ class JoyonwayBaseAdapter:
                 frame[IDX_FILTER_SLOT2_END_M],
             )
             result["filter_slot2_enabled"] = bool(raw_s2 & MASK_SLOT_ENABLED)
+
+        result["schedule_window_active"] = schedule_window_active(result)
 
         payload_end = max(0, len(frame) - 5)
         digest_input = bytearray()

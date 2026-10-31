@@ -91,6 +91,10 @@ def test_parse_status_core_fields(adapter: P23B32Adapter, logical_frame: bytes) 
     assert result["light"] is True
     assert result["blower"] is True
     assert result["ozone_active"] is False
+    assert result["circulation_active"] is True
+    assert result["jets_active"] is True
+    assert result["light_active"] is True
+    assert result["blower_active"] is True
     assert result["ozone_mode"] == "manual"
     assert result["heater_mode"] == "manual"
 
