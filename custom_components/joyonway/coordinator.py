@@ -78,6 +78,7 @@ class _PendingGroup:
     build_fn: Callable[[dict[str, Any], dict[str, Any] | None], bytes | None]
     on_failure_callbacks: list[Callable[[], None]] = field(default_factory=list)
     verify_fn: Callable[[dict[str, Any], dict[str, Any] | None], bool] | None = None
+    wait_for_confirmation: bool = True
 
 
 class IntentQueue:
@@ -110,6 +111,7 @@ class IntentQueue:
         on_failure: Callable[[], None] | None = None,
         verify_fn: Callable[[dict[str, Any], dict[str, Any] | None], bool]
         | None = None,
+        wait_for_confirmation: bool = True,
     ) -> None:
         """Submit an intent for coalescing and eventual execution.
 
@@ -121,12 +123,15 @@ class IntentQueue:
                 signal a no-op (skip sending).
             on_failure: Called if the command ultimately fails (after retries).
             verify_fn: Optional function to verify state convergence.
+            wait_for_confirmation: Whether to wait for broadcasts and retry after a
+                successful send when the target state is not yet visible.
         """
         if group in self._pending:
             pg = self._pending[group]
             pg.overrides.update(overrides)
             pg.build_fn = build_fn
             pg.verify_fn = verify_fn
+            pg.wait_for_confirmation = wait_for_confirmation
             if on_failure:
                 pg.on_failure_callbacks.append(on_failure)
         else:
@@ -135,6 +140,7 @@ class IntentQueue:
                 build_fn=build_fn,
                 on_failure_callbacks=[on_failure] if on_failure else [],
                 verify_fn=verify_fn,
+                wait_for_confirmation=wait_for_confirmation,
             )
 
         # Start the coalesce timer if not already running
@@ -202,6 +208,7 @@ class IntentQueue:
         self._coordinator.register_data_callback(on_update)
 
         converged = False
+        command_sent = False
         max_attempts = 3  # 1 initial + 2 retries (total 3)
 
         try:
@@ -219,6 +226,15 @@ class IntentQueue:
                     if attempt < max_attempts - 1:
                         await asyncio.sleep(1.0)
                     continue
+
+                command_sent = True
+
+                if not group.wait_for_confirmation:
+                    _LOGGER.debug(
+                        "Intent queue [%s]: command sent; skipping state confirmation",
+                        group_key,
+                    )
+                    break
 
                 # Wait for convergence: up to 2 broadcasts or 4.0 seconds safety timeout
                 start_time = time.monotonic()
@@ -264,7 +280,7 @@ class IntentQueue:
         finally:
             self._coordinator.unregister_data_callback(on_update)
 
-        if not converged:
+        if not converged and (group.wait_for_confirmation or not command_sent):
             _LOGGER.error(
                 "Intent queue [%s]: failed to converge to target state after %d attempts",
                 group_key,

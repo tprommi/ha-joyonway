@@ -32,7 +32,9 @@ from custom_components.joyonway.const import (
 )
 from custom_components.joyonway.coordinator import (
     IntentBuildError,
+    IntentQueue,
     JoyonwayCoordinator,
+    _PendingGroup,
 )
 
 
@@ -77,6 +79,23 @@ def coordinator(hass, entry):
     coord = JoyonwayCoordinator(hass, "127.0.0.1", 8899, "P25B85", entry)
     coord._sync_timeout = 0.0
     return coord
+
+
+@pytest.mark.asyncio
+async def test_heater_intent_does_not_retry_before_status_broadcast(coordinator):
+    """A successful heater write is not resent while the status lags behind."""
+    coordinator.data = {"heater_enabled": False}
+    coordinator.async_send_command = AsyncMock(return_value=True)
+    queue = IntentQueue(coordinator)
+    group = _PendingGroup(
+        overrides={"heater_enabled": True},
+        build_fn=lambda overrides, data: b"heater-on",
+        wait_for_confirmation=False,
+    )
+
+    await queue._process_group("heater", group)
+
+    coordinator.async_send_command.assert_awaited_once_with(b"heater-on")
 
 
 # ── Shutdown / race condition tests ──────────────────────────────────
@@ -412,7 +431,15 @@ class _DummyIntentQueue:
     def __init__(self, coordinator):
         self._coordinator = coordinator
 
-    def submit(self, group, overrides, build_fn, on_failure=None):
+    def submit(
+        self,
+        group,
+        overrides,
+        build_fn,
+        on_failure=None,
+        verify_fn=None,
+        wait_for_confirmation=True,
+    ):
         frame = build_fn(overrides, self._coordinator.data)
         if frame is not None:
             asyncio.ensure_future(self._coordinator.async_send_command(frame))

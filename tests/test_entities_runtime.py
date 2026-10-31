@@ -130,7 +130,15 @@ class DummyIntentQueue:
     def __init__(self, coordinator):
         self._coordinator = coordinator
 
-    def submit(self, group, overrides, build_fn, on_failure=None, verify_fn=None):
+    def submit(
+        self,
+        group,
+        overrides,
+        build_fn,
+        on_failure=None,
+        verify_fn=None,
+        wait_for_confirmation=True,
+    ):
         frame = build_fn(overrides, self._coordinator.data)
         if frame is not None:
             asyncio.ensure_future(self._coordinator.async_send_command(frame))
@@ -355,6 +363,13 @@ async def test_climate_hvac_mode_commands(entry: SimpleNamespace) -> None:
     sent = [call.args[0] for call in coordinator.async_send_command.await_args_list]
     assert CMD_HEATER_ON in sent
 
+    # Transitional broadcasts that still report the old state must not snap
+    # the thermostat back while the requested state is pending.
+    coordinator.data["heater_enabled"] = False
+    climate._handle_coordinator_update()
+    assert climate._pending_hvac_mode == HVACMode.HEAT
+    assert climate.hvac_mode == HVACMode.HEAT
+
     # 2. Simulate broadcast update confirming state
     coordinator.data["heater_enabled"] = True
     climate._handle_coordinator_update()
@@ -386,7 +401,7 @@ async def test_climate_hvac_mode_optimistic_and_timeout(
 
     import custom_components.joyonway.climate as climate_module
 
-    monkeypatch.setattr(climate_module, "OPTIMISTIC_TIMEOUT_SECONDS", 0.01)
+    monkeypatch.setattr(climate_module, "HEATER_CONFIRMATION_TIMEOUT_SECONDS", 0.01)
 
     await climate.async_set_hvac_mode(HVACMode.HEAT)
     assert climate._pending_hvac_mode == HVACMode.HEAT
