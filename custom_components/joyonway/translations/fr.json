@@ -91,6 +91,7 @@
       "unmapped_bytes_hash": { "name": "Hachage des octets non mappés" }
     },
     "binary_sensor": {
+      "pv_heating_active": { "name": "Chauffage photovoltaïque actif" },
       "bridge_connectivity": { "name": "Pont RS485" }
     },
     "fan": {
@@ -99,6 +100,8 @@
       "jets_right": { "name": "Jets droit" }
     },
     "switch": {
+      "pv_heating_enabled": { "name": "Chauffage photovoltaïque" },
+      "pv_heating_release": { "name": "Autorisation surplus photovoltaïque" },
       "heater": { "name": "Chauffage" },
       "ozone": { "name": "Ozone" },
       "blower": { "name": "Souffleur d'air" },
@@ -109,6 +112,9 @@
       "heat_slot2_enabled": { "name": "Chauffage créneau 2" },
       "filter_slot1_enabled": { "name": "Filtration créneau 1" },
       "filter_slot2_enabled": { "name": "Filtration créneau 2" }
+    },
+    "number": {
+      "pv_heating_setpoint": { "name": "Température cible du chauffage photovoltaïque" }
     },
     "time": {
       "heat_slot1_start": { "name": "Chauffage créneau 1 début" },

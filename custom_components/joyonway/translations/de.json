@@ -133,6 +133,9 @@
       },
       "light_active": {
         "name": "Licht aktiv"
+      },
+      "pv_heating_active": {
+        "name": "PV-Heizen aktiv"
       }
     },
     "fan": {
@@ -159,6 +162,12 @@
       "auto_sync_clock": {
         "name": "Uhr automatisch synchronisieren"
       },
+      "pv_heating_enabled": {
+        "name": "PV-Heizen"
+      },
+      "pv_heating_release": {
+        "name": "PV-Überschussfreigabe"
+      },
       "manual_ozone": {
         "name": "Ozon manuell"
       },
@@ -176,6 +185,11 @@
       },
       "filter_slot2_enabled": {
         "name": "Filter-Slot 2"
+      }
+    },
+    "number": {
+      "pv_heating_setpoint": {
+        "name": "PV-Heizen Solltemperatur"
       }
     },
     "time": {
