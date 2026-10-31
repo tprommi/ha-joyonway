@@ -32,6 +32,8 @@ P25_SIGNATURE = adapters_p25.P25_SIGNATURE
 IDX_OZONE_MODE = adapters_p25.IDX_OZONE_MODE
 MASK_BLOWER_CONFIG = adapters_p25.MASK_BLOWER_CONFIG
 IDX_HEATER_STATE = adapters_p25.IDX_HEATER_STATE
+IDX_LIGHT_CYCLE = adapters_p25.IDX_LIGHT_CYCLE
+MASK_HEATING_CYCLE = adapters_p25.MASK_HEATING_CYCLE
 
 get_adapter = adapters_registry.get_adapter
 ADAPTERS = adapters_registry.ADAPTERS
@@ -124,16 +126,16 @@ def test_p25b37_parse_status_blower_present(
 
 
 @pytest.mark.parametrize(
-    ("heater_byte", "state", "active", "ozone"),
+    ("heater_byte", "state", "active", "ozone", "heater_enabled"),
     [
-        (0x00, "off", False, False),
-        (0x10, "standby", False, False),
-        (0x11, "circulation", False, False),
-        (0x14, "heating", True, False),
-        (0x15, "heating", True, False),
-        (0x01, "ozone", False, True),
-        (0x81, "ozone", False, True),
-        (0x99, "unknown", False, False),
+        (0x00, "off", False, False, False),
+        (0x10, "standby", False, False, True),
+        (0x11, "circulation", False, False, True),
+        (0x14, "heating", True, False, True),
+        (0x15, "heating", True, False, True),
+        (0x01, "ozone", False, True, False),
+        (0x81, "ozone", False, True, False),
+        (0x99, "unknown", False, False, False),
     ],
 )
 def test_p25b37_heater_state_mapping(
@@ -143,6 +145,7 @@ def test_p25b37_heater_state_mapping(
     state: str,
     active: bool,
     ozone: bool,
+    heater_enabled: bool,
 ) -> None:
     modified = bytearray(logical_frame)
     modified[IDX_HEATER_STATE] = heater_byte
@@ -150,6 +153,33 @@ def test_p25b37_heater_state_mapping(
     assert result["status"] == state
     assert result["heater_active"] is active
     assert result["ozone_active"] is ozone
+    assert result["heater_enabled"] is heater_enabled
+
+
+def test_p25b37_pump_cycle_does_not_enable_thermostat(
+    b37_adapter: P25B37Adapter, logical_frame: bytes
+) -> None:
+    modified = bytearray(logical_frame)
+    modified[IDX_HEATER_STATE] = 0x00
+    modified[IDX_LIGHT_CYCLE] |= MASK_HEATING_CYCLE
+
+    result = b37_adapter.parse_status(bytes(modified))
+
+    assert result["status"] == "circulation"
+    assert result["heater_enabled"] is False
+
+
+def test_p25b37_pump_cycle_preserves_thermostat_standby(
+    b37_adapter: P25B37Adapter, logical_frame: bytes
+) -> None:
+    modified = bytearray(logical_frame)
+    modified[IDX_HEATER_STATE] = 0x10
+    modified[IDX_LIGHT_CYCLE] |= MASK_HEATING_CYCLE
+
+    result = b37_adapter.parse_status(bytes(modified))
+
+    assert result["status"] == "circulation"
+    assert result["heater_enabled"] is True
 
 
 def test_adapter_registry() -> None:
