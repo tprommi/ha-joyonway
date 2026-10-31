@@ -92,7 +92,8 @@
     },
     "binary_sensor": {
       "pv_heating_active": { "name": "PV heating active" },
-      "bridge_connectivity": { "name": "RS485 bridge" }
+      "bridge_connectivity": { "name": "RS485 bridge" },
+      "heater_active": { "name": "Heating element active" }
     },
     "fan": {
       "jets": { "name": "Jets" },

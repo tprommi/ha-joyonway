@@ -117,7 +117,7 @@
         "name": "Ozon aktiv"
       },
       "heater_active": {
-        "name": "Heizung aktiv"
+        "name": "Heizelement aktiv"
       },
       "circulation_active": {
         "name": "Zirkulation aktiv"

@@ -369,8 +369,8 @@ _P25_ENTITIES: list[SpaEntityDescription] = [
     SpaEntityDescription(
         platform="binary_sensor",
         key="heater_active",
-        name="Heating active",
-        icon="mdi:fire",
+        name="Heating element active",
+        icon="mdi:heat-wave",
         device_class="heat",
     ),
     SpaEntityDescription(

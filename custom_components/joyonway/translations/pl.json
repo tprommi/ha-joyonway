@@ -92,7 +92,8 @@
     },
     "binary_sensor": {
       "pv_heating_active": { "name": "Ogrzewanie PV aktywne" },
-      "bridge_connectivity": { "name": "Mostek RS485" }
+      "bridge_connectivity": { "name": "Mostek RS485" },
+      "heater_active": { "name": "Grzałka aktywna" }
     },
     "fan": {
       "jets": { "name": "Dysze" },
