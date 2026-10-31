@@ -191,8 +191,7 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
           - HVACMode.OFF → OFF
           - heating → HEATING (actively heating water)
           - circulation → PREHEATING (jet running pre/post-heat)
-          - ozone → FAN
-          - standby / other → IDLE
+          - ozone / standby / other → IDLE
         """
         if self.coordinator.data is None:
             return None
@@ -205,8 +204,6 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
             return HVACAction.HEATING
         if status == "circulation":
             return HVACAction.PREHEATING
-        if status == "ozone":
-            return HVACAction.FAN
         return HVACAction.IDLE
 
     @property

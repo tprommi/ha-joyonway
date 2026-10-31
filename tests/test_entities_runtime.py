@@ -337,7 +337,7 @@ def test_climate_action_mapping(entry: SimpleNamespace) -> None:
 
     assert heating.hvac_action == HVACAction.HEATING
     assert circulation.hvac_action == HVACAction.PREHEATING
-    assert ozone.hvac_action == HVACAction.FAN
+    assert ozone.hvac_action == HVACAction.IDLE
     assert standby.hvac_action == HVACAction.IDLE
     assert heater_off.hvac_action == HVACAction.OFF
 
