@@ -91,7 +91,8 @@
       "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
     },
     "binary_sensor": {
-      "bridge_connectivity": { "name": "RS485 bridge" }
+      "bridge_connectivity": { "name": "RS485 bridge" },
+      "heater_active": { "name": "Heating element active" }
     },
     "fan": {
       "jets": { "name": "Jets" },

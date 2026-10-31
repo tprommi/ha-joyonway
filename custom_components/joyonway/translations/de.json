@@ -112,6 +112,9 @@
     "binary_sensor": {
       "bridge_connectivity": {
         "name": "RS485-Bridge"
+      },
+      "heater_active": {
+        "name": "Heizelement aktiv"
       }
     },
     "fan": {

@@ -310,6 +310,13 @@ class P25B37Adapter(P25BaseAdapter):
 _P25_ENTITIES: list[SpaEntityDescription] = [
     # Sensors
     SpaEntityDescription(
+        platform="binary_sensor",
+        key="heater_active",
+        name="Heating element active",
+        icon="mdi:heat-wave",
+        device_class="heat",
+    ),
+    SpaEntityDescription(
         platform="sensor",
         key="current_temperature",
         name="Current temperature",

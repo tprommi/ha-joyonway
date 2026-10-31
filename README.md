@@ -105,7 +105,7 @@ The integration exposes entities grouped under the standard Home Assistant devic
 
 | Entity | Platform | Description |
 |---|---|---|
-| **Thermostat** | Climate | Target setpoint control (10°C to 40°C) and heater armed state control via HVAC modes (`HEAT`/`OFF`) |
+| **Thermostat** | Climate | User setpoint and requested mode (`HEAT`/`OFF`) |
 | **Jets** | Fan | Jets / pump speed control |
 | **Heating** | Switch | Heating manual ON/OFF (available when **Manual heating** is ON) |
 | **Ozone** | Switch | Ozone ON/OFF (available when **Manual ozone** is ON) |
@@ -118,6 +118,7 @@ The integration exposes entities grouped under the standard Home Assistant devic
 |---|---|
 | **Current temperature** | Current water temp in °C |
 | **Setpoint temperature** | Current target temperature in °C |
+| **Heating element active** (Binary Sensor) | Controller feedback that the heating element relay is active |
 | **Status** | Current operational status (`off`, `standby`, `circulation`, `heating`, `ozone`) with dynamic icons |
 | **Jets** | Current jets speed state (`off`, `low`, `high`) |
 

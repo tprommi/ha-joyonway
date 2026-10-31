@@ -398,7 +398,8 @@ class JoyonwayBaseAdapter:
         activity_byte = frame[IDX_ACTIVITY_FLAG]
 
         heater_base = heater_byte & ~MASK_HEATER_BLOWER
-        status = self.heater_state_map.get(heater_base, "unknown")
+        heater_status = self.heater_state_map.get(heater_base, "unknown")
+        status = heater_status
 
         heating_cycle_active = bool(light_byte & MASK_HEATING_CYCLE)
         if status in ("off", "standby") and heating_cycle_active:
@@ -410,7 +411,8 @@ class JoyonwayBaseAdapter:
             "light": bool(light_byte & self._mask_light),
             "light_color_index": light_byte & self._mask_light,
             "heater_active": self.heater_state_map.get(heater_base) == "heating",
-            "heater_enabled": status in ("standby", "circulation", "heating"),
+            "heater_enabled": heater_status
+            in ("standby", "circulation", "heating"),
             "status": status,
             "heater_byte": heater_byte,
             "ozone_active": self.heater_state_map.get(heater_base) == "ozone",

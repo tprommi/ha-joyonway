@@ -91,7 +91,8 @@
       "unmapped_bytes_hash": { "name": "Hachage des octets non mappés" }
     },
     "binary_sensor": {
-      "bridge_connectivity": { "name": "Pont RS485" }
+      "bridge_connectivity": { "name": "Pont RS485" },
+      "heater_active": { "name": "Élément chauffant actif" }
     },
     "fan": {
       "jets": { "name": "Jets" },
