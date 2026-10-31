@@ -179,8 +179,12 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
         """Return current HVAC mode based on heater enabled state."""
         if self._pending_hvac_mode is not None:
             return self._pending_hvac_mode
-        if self.coordinator.pv_heating.active:
+        pv_heating = self.coordinator.pv_heating
+        if pv_heating.active:
             return HVACMode.OFF
+        user_enabled = getattr(pv_heating, "user_enabled", None)
+        if user_enabled is not None:
+            return HVACMode.HEAT if user_enabled else HVACMode.OFF
         state = self._get_coordinator_heater_state()
         if state is True:
             return HVACMode.HEAT
