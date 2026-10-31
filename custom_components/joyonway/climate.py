@@ -25,7 +25,7 @@ from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature, PRECISION_W
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from .const import OPTIMISTIC_TIMEOUT_SECONDS
+from .const import HEATER_CONFIRMATION_TIMEOUT_SECONDS, OPTIMISTIC_TIMEOUT_SECONDS
 from .coordinator import JoyonwayCoordinator, JoyonwayConfigEntry
 from .entity import JoyonwayCoordinatorEntity, device_info
 
@@ -145,11 +145,11 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
             self._pending_hvac_timeout_task = None
 
     async def _pending_hvac_timeout(self) -> None:
-        await asyncio.sleep(OPTIMISTIC_TIMEOUT_SECONDS)
+        await asyncio.sleep(HEATER_CONFIRMATION_TIMEOUT_SECONDS)
         _LOGGER.warning(
             "Thermostat: HVAC mode %s not confirmed by spa within %ds, reverting",
             self._pending_hvac_mode,
-            int(OPTIMISTIC_TIMEOUT_SECONDS),
+            int(HEATER_CONFIRMATION_TIMEOUT_SECONDS),
         )
         self._pending_hvac_mode = None
         self._pending_hvac_timeout_task = None
@@ -264,6 +264,7 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
             overrides={"heater_enabled": on},
             build_fn=_build_heater,
             on_failure=_on_failure,
+            wait_for_confirmation=False,
         )
 
     async def async_set_temperature(self, **kwargs: Any) -> None:

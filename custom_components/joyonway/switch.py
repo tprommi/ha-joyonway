@@ -11,7 +11,12 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 
-from .const import OZONE_MODE_MANUAL, OPTIMISTIC_TIMEOUT_SECONDS, OPT_AUTO_SYNC_CLOCK
+from .const import (
+    HEATER_CONFIRMATION_TIMEOUT_SECONDS,
+    OZONE_MODE_MANUAL,
+    OPTIMISTIC_TIMEOUT_SECONDS,
+    OPT_AUTO_SYNC_CLOCK,
+)
 from .coordinator import (
     IntentBuildError,
     JoyonwayCoordinator,
@@ -96,11 +101,11 @@ class _SpaTargetStateSwitch(JoyonwayCoordinatorEntity, SwitchEntity):
             self._pending_task = None
 
     async def _pending_timeout(self) -> None:
-        await asyncio.sleep(OPTIMISTIC_TIMEOUT_SECONDS)
+        await asyncio.sleep(self._pending_timeout_seconds)
         _LOGGER.warning(
             "%s: command not confirmed by spa within %ds, reverting state",
             self._attr_translation_key,
-            int(OPTIMISTIC_TIMEOUT_SECONDS),
+            int(self._pending_timeout_seconds),
         )
         self._pending_state = None
         self._pending_task = None
@@ -123,6 +128,7 @@ class SpaHeaterSwitch(_SpaTargetStateSwitch):
     _attr_has_entity_name = True
     _attr_translation_key = "heater"
     _attr_icon = "mdi:fire"
+    _pending_timeout_seconds = HEATER_CONFIRMATION_TIMEOUT_SECONDS
 
     def __init__(
         self,
@@ -181,6 +187,7 @@ class SpaHeaterSwitch(_SpaTargetStateSwitch):
             overrides={"heater_enabled": on},
             build_fn=_build_heater,
             on_failure=self._clear_pending_on_failure,
+            wait_for_confirmation=False,
         )
 
 
