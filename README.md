@@ -112,19 +112,6 @@ The integration exposes entities grouped under the standard Home Assistant devic
 | **Light** | Light | Light ON/OFF control with preset effects and color picker (if supported by model) |
 | **Blower** | Switch | Air blower / air bubbler ON/OFF (optional hardware) |
 
-### PV heating
-
-PV heating uses a separate target temperature and only takes over when the user thermostat is **Off**, PV heating is enabled, an external process has turned on **PV surplus release**, the bridge is connected, and manual heating is allowed by the controller. The external process decides whether surplus is sufficient; this integration does not measure PV power.
-
-| Entity | Platform | Purpose |
-|---|---|---|
-| **PV heating** | Switch | Master enable for the feature |
-| **PV surplus release** | Switch | Permission controlled by an external automation or process |
-| **PV heating target temperature** | Number | Independent PV target, within the controller's supported range |
-| **PV heating active** | Binary sensor | PV control currently owns the heater; it does not mean the heating element is firing |
-
-On takeover, the integration remembers the user's target, then sends the PV target and enables the heater through the normal intent queue. The user thermostat continues to show **Off** and retains its own target. Turning the user thermostat **On** takes priority and restores its target. Revoking release or disabling PV heating turns the heater off and restores the user target. The release switch always starts **Off** after a Home Assistant restart; startup sends no commands to the spa. If Home Assistant restarts while PV heating owns the heater, the spa may remain armed until it is turned off explicitly.
-
 ### Sensors
 
 | Entity | Description |

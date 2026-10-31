@@ -91,7 +91,6 @@
       "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
     },
     "binary_sensor": {
-      "pv_heating_active": { "name": "PV heating active" },
       "bridge_connectivity": { "name": "RS485 bridge" }
     },
     "fan": {
@@ -100,8 +99,6 @@
       "jets_right": { "name": "Jets Right" }
     },
     "switch": {
-      "pv_heating_enabled": { "name": "PV heating" },
-      "pv_heating_release": { "name": "PV surplus release" },
       "heater": { "name": "Heating" },
       "ozone": { "name": "Ozone" },
       "blower": { "name": "Blower" },
@@ -112,9 +109,6 @@
       "heat_slot2_enabled": { "name": "Heat slot 2" },
       "filter_slot1_enabled": { "name": "Filter slot 1" },
       "filter_slot2_enabled": { "name": "Filter slot 2" }
-    },
-    "number": {
-      "pv_heating_setpoint": { "name": "PV heating target temperature" }
     },
     "time": {
       "heat_slot1_start": { "name": "Heat slot 1 begin" },

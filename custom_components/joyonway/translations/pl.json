@@ -91,7 +91,6 @@
       "unmapped_bytes_hash": { "name": "Hash niezmapowanych bajtów" }
     },
     "binary_sensor": {
-      "pv_heating_active": { "name": "Ogrzewanie PV aktywne" },
       "bridge_connectivity": { "name": "Mostek RS485" }
     },
     "fan": {
@@ -100,8 +99,6 @@
       "jets_right": { "name": "Dysze prawe" }
     },
     "switch": {
-      "pv_heating_enabled": { "name": "Ogrzewanie PV" },
-      "pv_heating_release": { "name": "Zezwolenie na nadwyżkę PV" },
       "heater": { "name": "Ogrzewanie" },
       "ozone": { "name": "Ozonator" },
       "blower": { "name": "Dmuchawa" },
@@ -112,9 +109,6 @@
       "heat_slot2_enabled": { "name": "Przedział ogrzewania 2" },
       "filter_slot1_enabled": { "name": "Przedział filtrowania 1" },
       "filter_slot2_enabled": { "name": "Przedział filtrowania 2" }
-    },
-    "number": {
-      "pv_heating_setpoint": { "name": "Temperatura docelowa ogrzewania PV" }
     },
     "time": {
       "heat_slot1_start": { "name": "Początek przedziału ogrzewania 1" },

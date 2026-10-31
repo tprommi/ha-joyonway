@@ -23,7 +23,6 @@ from .coordinator import (
     JoyonwayConfigEntry,
 )
 from .entity import JoyonwayCoordinatorEntity, device_info, validate_schedule_data
-from .pv_heating import PVHeatingEnabledSwitch, PVHeatingReleaseSwitch
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,8 +40,6 @@ async def async_setup_entry(
         SpaOzoneSwitch(coordinator, entry),
         *([SpaBlowerSwitch(coordinator, entry)] if coordinator.has_blower else []),
         SpaAutoClockSyncSwitch(coordinator, entry),
-        PVHeatingEnabledSwitch(coordinator, entry),
-        PVHeatingReleaseSwitch(coordinator, entry),
         SpaScheduleSlotSwitch(coordinator, entry, "heat", 1),
         SpaScheduleSlotSwitch(coordinator, entry, "heat", 2),
         SpaScheduleSlotSwitch(coordinator, entry, "filter", 1),
@@ -157,8 +154,6 @@ class SpaHeaterSwitch(_SpaTargetStateSwitch):
     def is_on(self) -> bool | None:
         if self._pending_state is not None:
             return self._pending_state
-        if self.coordinator.pv_heating.active:
-            return False
         return self._get_coordinator_heater_state()
 
     def _broadcast_confirms_pending(self) -> bool:
@@ -167,16 +162,10 @@ class SpaHeaterSwitch(_SpaTargetStateSwitch):
     async def async_turn_on(self, **kwargs: Any) -> None:
         if self.is_on:
             return
-        self.coordinator.pv_heating.user_turn_on()
         self._submit_heater_intent(on=True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
         if self.is_on is False:
-            return
-        if self.coordinator.pv_heating.user_turn_off():
-            self._pending_state = None
-            self._cancel_pending_timeout()
-            self.async_write_ha_state()
             return
         self._submit_heater_intent(on=False)
 

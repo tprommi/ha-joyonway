@@ -50,7 +50,6 @@ CLOCK_SYNC_COOLDOWN: int = 3600  # seconds between auto syncs
 # Loaded platforms
 PLATFORMS: list[Platform] = [
     Platform.SENSOR,
-    Platform.NUMBER,
     Platform.BINARY_SENSOR,
     Platform.SWITCH,
     Platform.FAN,

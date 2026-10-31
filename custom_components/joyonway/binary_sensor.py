@@ -17,7 +17,6 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .adapters.base import SpaEntityDescription
 from .coordinator import JoyonwayCoordinator, JoyonwayConfigEntry
 from .entity import JoyonwayCoordinatorEntity, device_info
-from .pv_heating import PVHeatingActiveSensor
 
 
 async def async_setup_entry(
@@ -37,7 +36,6 @@ async def async_setup_entry(
     ]
     # Always add bridge connectivity sensor
     entities.append(JoyonwayBridgeConnectivity(coordinator, entry))
-    entities.append(PVHeatingActiveSensor(coordinator, entry))
 
     async_add_entities(entities)
 
