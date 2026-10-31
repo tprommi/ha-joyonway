@@ -159,6 +159,10 @@ Observed unicast destinations are `0x10`–`0x13`, `0x20`–`0x23`, `0x30`, `0x4
 | **Filter Schedule Slot 2** | Bytes 33–36 [✨] | Bytes 33–36 [✨] | Bytes 33–36 [✅] | Start/End hours & minutes (Hour \| 0x40 if enabled). |
 
 
+The individual activity binary sensors read the broadcast fields directly: circulation from byte 17 bit `0x80`, jets from byte 12, light from the model's light mask in byte 17, and blower from byte 14 bit `0x08`. The heating and ozone sensors use the model's heater-state decoding. On P25B37, state `0x95` is treated as simultaneous heating and ozone activity.
+
+`schedule_window_active` is a derived state, not a controller status bit. It is true while the spa clock is within any enabled heat or filter schedule slot, using an inclusive start and exclusive end. Slots crossing midnight are supported; equal start and end times count as inactive. Missing or invalid spa time or schedule data yields an unknown state. The timer state says nothing about whether the heater or ozone relay is currently active.
+
 *Status markers explained in [Appendix A](#appendix-a-status-legend).*
 
 ### 4.2. Light Color Preset Index

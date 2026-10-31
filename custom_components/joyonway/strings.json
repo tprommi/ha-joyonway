@@ -91,7 +91,14 @@
       "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
     },
     "binary_sensor": {
-      "bridge_connectivity": { "name": "RS485 bridge" }
+      "bridge_connectivity": { "name": "RS485 bridge" },
+      "ozone_active": { "name": "Ozone active" },
+      "heater_active": { "name": "Heating active" },
+      "circulation_active": { "name": "Circulation active" },
+      "schedule_window_active": { "name": "Schedule window active" },
+      "blower_active": { "name": "Blower active" },
+      "jets_active": { "name": "Jets active" },
+      "light_active": { "name": "Light active" }
     },
     "fan": {
       "jets": { "name": "Jets" },

@@ -133,6 +133,7 @@ def test_p25b37_parse_status_blower_present(
         (0x15, "heating", True, False),
         (0x01, "ozone", False, True),
         (0x81, "ozone", False, True),
+        (0x95, "heating", True, True),
         (0x99, "unknown", False, False),
     ],
 )

@@ -118,6 +118,10 @@ def test_parse_status_core_fields(
     assert result["jet_high"] is True
     assert result["jet_low"] is False
     assert result["light"] is True
+    assert result["circulation_active"] is False
+    assert result["jets_active"] is True
+    assert result["light_active"] is True
+    assert result["blower_active"] is False
     assert result["ozone_mode"] == "manual"
     assert result["heater_mode"] == "manual"
     assert result["blower_present"] is False
@@ -151,6 +155,53 @@ def test_parse_status_datetime(
     result = b85_adapter.parse_status(bytes(modified))
     assert isinstance(result["spa_datetime"], datetime)
     assert result["spa_datetime"].tzinfo == timezone.utc
+
+
+@pytest.mark.parametrize(
+    ("hour", "minute", "heat_enabled", "filter_enabled", "expected"),
+    [
+        (10, 0, True, False, True),
+        (11, 0, True, False, False),
+        (23, 30, True, False, True),
+        (0, 30, True, False, True),
+        (1, 0, True, False, False),
+        (14, 0, False, True, True),
+        (14, 0, False, False, False),
+    ],
+)
+def test_schedule_window_active_combines_heat_and_filter_windows(
+    b85_adapter: P25B85Adapter,
+    logical_frame: bytes,
+    hour: int,
+    minute: int,
+    heat_enabled: bool,
+    filter_enabled: bool,
+    expected: bool,
+) -> None:
+    frame = bytearray(logical_frame)
+    frame[19:27] = bytes(8)
+    frame[29:37] = bytes(8)
+    frame[IDX_DATETIME_START : IDX_DATETIME_START + 6] = bytes(
+        [24, 1, 1, hour, minute, 0]
+    )
+    frame[19:23] = bytes([9 | (0x40 if heat_enabled else 0), 0, 11, 0])
+    frame[23:27] = bytes([23 | (0x40 if heat_enabled else 0), 0, 1, 0])
+    frame[29:33] = bytes([13 | (0x40 if filter_enabled else 0), 0, 15, 0])
+
+    result = b85_adapter.parse_status(bytes(frame))
+    assert result is not None
+    assert result["schedule_window_active"] is expected
+
+
+def test_schedule_window_active_unknown_without_valid_spa_clock(
+    b85_adapter: P25B85Adapter, logical_frame: bytes
+) -> None:
+    frame = bytearray(logical_frame)
+    frame[IDX_DATETIME_START] = 0
+    frame[IDX_DATETIME_START + 1] = 0
+    result = b85_adapter.parse_status(bytes(frame))
+    assert result is not None
+    assert result["schedule_window_active"] is None
 
 
 def test_parse_rejects_wrong_signature(

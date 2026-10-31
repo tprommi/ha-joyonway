@@ -22,6 +22,7 @@ ROOT = Path(__file__).resolve().parents[1]
 if str(ROOT) not in sys.path:
     sys.path.insert(0, str(ROOT))
 
+from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.climate import HVACAction, HVACMode
 from homeassistant.components.fan import FanEntityFeature
 from homeassistant.components.sensor import SensorDeviceClass
@@ -208,6 +209,30 @@ def test_binary_sensor_and_connectivity_sensor(entry: SimpleNamespace) -> None:
     assert binary.available is False
     assert connectivity.available is True
     assert connectivity.is_on is False
+
+    running = JoyonwayBinarySensor(
+        coordinator,
+        entry,
+        SpaEntityDescription(
+            platform="binary_sensor",
+            key="jets_active",
+            name="Jets active",
+            device_class="running",
+        ),
+    )
+    assert running.device_class == BinarySensorDeviceClass.RUNNING
+
+    coordinator.data["schedule_window_active"] = None
+    timer = JoyonwayBinarySensor(
+        coordinator,
+        entry,
+        SpaEntityDescription(
+            platform="binary_sensor",
+            key="schedule_window_active",
+            name="Schedule window active",
+        ),
+    )
+    assert timer.is_on is None
 
 
 @pytest.mark.asyncio

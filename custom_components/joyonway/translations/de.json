@@ -112,6 +112,27 @@
     "binary_sensor": {
       "bridge_connectivity": {
         "name": "RS485-Bridge"
+      },
+      "ozone_active": {
+        "name": "Ozon aktiv"
+      },
+      "heater_active": {
+        "name": "Heizung aktiv"
+      },
+      "circulation_active": {
+        "name": "Zirkulation aktiv"
+      },
+      "schedule_window_active": {
+        "name": "Zeitfenster aktiv"
+      },
+      "blower_active": {
+        "name": "Luftsprudler aktiv"
+      },
+      "jets_active": {
+        "name": "Düsen aktiv"
+      },
+      "light_active": {
+        "name": "Licht aktiv"
       }
     },
     "fan": {

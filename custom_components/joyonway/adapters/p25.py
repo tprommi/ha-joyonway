@@ -12,6 +12,7 @@ from .base import (
     JoyonwayBaseAdapter,
     JetDescription,
     JetType,
+    MASK_HEATER_BLOWER,
     SpaEntityDescription,
     MASK_OZONE_MODE_MANUAL,
     MASK_HEATER_MODE_MANUAL,
@@ -304,7 +305,22 @@ class P25B37Adapter(P25BaseAdapter):
         0x14: "heating",
         0x15: "heating",
         0x81: "ozone",
+        0x95: "heating",
     }
+
+    def _post_parse_status(
+        self,
+        result: dict,
+        frame: bytes,
+        jet_byte: int,
+        ozone_mode_byte: int,
+        heater_byte: int,
+    ) -> None:
+        super()._post_parse_status(
+            result, frame, jet_byte, ozone_mode_byte, heater_byte
+        )
+        if heater_byte & ~MASK_HEATER_BLOWER == 0x95:
+            result["ozone_active"] = True
 
 
 _P25_ENTITIES: list[SpaEntityDescription] = [
@@ -342,6 +358,55 @@ _P25_ENTITIES: list[SpaEntityDescription] = [
         },
         device_class="enum",
         options=["off", "standby", "circulation", "heating", "ozone", "unknown"],
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="ozone_active",
+        name="Ozone active",
+        icon="mdi:shield-sun",
+        device_class="running",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="heater_active",
+        name="Heating active",
+        icon="mdi:fire",
+        device_class="heat",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="circulation_active",
+        name="Circulation active",
+        icon="mdi:pump",
+        device_class="running",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="schedule_window_active",
+        name="Schedule window active",
+        icon="mdi:timer-outline",
+        device_class="running",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="jets_active",
+        name="Jets active",
+        icon="mdi:weather-windy",
+        device_class="running",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="light_active",
+        name="Light active",
+        icon="mdi:lightbulb",
+        device_class="running",
+    ),
+    SpaEntityDescription(
+        platform="binary_sensor",
+        key="blower_active",
+        name="Blower active",
+        icon="mdi:chart-bubble",
+        device_class="running",
     ),
     SpaEntityDescription(
         platform="sensor",
