@@ -154,6 +154,14 @@ class DummyCoordinator:
         self.adapter = DummyAdapter()
         self.async_send_command = AsyncMock(return_value=True)
         self.intent_queue = DummyIntentQueue(self)
+        self.pv_heating = SimpleNamespace(
+            active=False,
+            restoring_user_target=False,
+            user_setpoint=None,
+            user_turn_on=lambda: None,
+            user_turn_off=lambda: False,
+            set_user_setpoint=lambda value: None,
+        )
 
     @property
     def available(self) -> bool:

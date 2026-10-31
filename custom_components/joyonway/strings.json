@@ -98,7 +98,8 @@
       "schedule_window_active": { "name": "Schedule window active" },
       "blower_active": { "name": "Blower active" },
       "jets_active": { "name": "Jets active" },
-      "light_active": { "name": "Light active" }
+      "light_active": { "name": "Light active" },
+      "pv_heating_active": { "name": "PV heating active" }
     },
     "fan": {
       "jets": { "name": "Jets" },
@@ -110,12 +111,17 @@
       "ozone": { "name": "Ozone" },
       "blower": { "name": "Blower" },
       "auto_sync_clock": { "name": "Auto-sync clock" },
+      "pv_heating_enabled": { "name": "PV heating" },
+      "pv_heating_release": { "name": "PV surplus release" },
       "manual_ozone": { "name": "Manual ozone" },
       "manual_heating": { "name": "Manual heating" },
       "heat_slot1_enabled": { "name": "Heat slot 1" },
       "heat_slot2_enabled": { "name": "Heat slot 2" },
       "filter_slot1_enabled": { "name": "Filter slot 1" },
       "filter_slot2_enabled": { "name": "Filter slot 2" }
+    },
+    "number": {
+      "pv_heating_setpoint": { "name": "PV heating target temperature" }
     },
     "time": {
       "heat_slot1_start": { "name": "Heat slot 1 begin" },
