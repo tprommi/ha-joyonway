@@ -129,6 +129,8 @@ The PV surplus release switch shows the requested state immediately. The integra
 
 On takeover, the integration remembers the user's target, then sends the PV target and enables the heater through the normal intent queue. The user thermostat continues to show **Off** and retains its own target. Turning the user thermostat **On** takes priority and restores its target. Revoking release or disabling PV heating turns the heater off and restores the user target. The release switch always starts **Off** after a Home Assistant restart; startup sends no commands to the spa. If Home Assistant restarts while PV heating owns the heater, the spa may remain armed until it is turned off explicitly.
 
+If PV heating is explicitly switched off after such a restart, the integration sends a heater-off command when the user thermostat is off and the spa still reports its heater as enabled. This does not run automatically at startup and does not override a user thermostat that is on.
+
 ### Sensors
 
 | Entity | Description |

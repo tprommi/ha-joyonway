@@ -83,9 +83,21 @@ class PVHeatingController:
         return self.user_enabled is False
 
     def set_enabled(self, enabled: bool) -> None:
+        was_enabled = self.enabled
+        was_active = self.active
         self.enabled = enabled
         self._save(**{OPT_PV_ENABLED: enabled})
         self._reconcile()
+        if (
+            was_enabled
+            and not enabled
+            and not was_active
+            and self.user_enabled is False
+            and self.coordinator.adapter.is_heater_enabled(self.coordinator.data)
+            is True
+        ):
+            # After a restart PV ownership is lost, but the spa may still be armed.
+            self._submit_heater(False)
         self._notify()
 
     def request_release(self, released: bool) -> None:
