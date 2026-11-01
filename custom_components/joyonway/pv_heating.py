@@ -25,6 +25,7 @@ OPT_PV_ENABLED = "pv_heating_enabled"
 OPT_PV_SETPOINT = "pv_heating_setpoint"
 OPT_PV_USER_SETPOINT = "pv_user_setpoint"
 OPT_PV_USER_ENABLED = "pv_user_heater_enabled"
+OPT_PV_OWNER = "pv_heating_owned"
 OPT_PV_ON_DELAY = "pv_heating_on_delay"
 OPT_PV_OFF_DELAY = "pv_heating_off_delay"
 DEFAULT_PV_DELAY = 60
@@ -47,7 +48,11 @@ class PVHeatingController:
         self.setpoint = options.get(OPT_PV_SETPOINT)
         self.user_setpoint = options.get(OPT_PV_USER_SETPOINT)
         self.user_enabled = options.get(OPT_PV_USER_ENABLED)
+        self._pv_owned_before_restart = options.get(OPT_PV_OWNER)
         self._startup_heater_check_pending = True
+        self._last_heater_enabled: bool | None = None
+        self._last_setpoint: int | None = None
+        self._pv_heater_on_sent = False
 
     def _notify(self) -> None:
         self.coordinator.async_update_listeners()
@@ -154,7 +159,7 @@ class PVHeatingController:
     def user_turn_on(self) -> None:
         """Give a user HEAT request priority over PV ownership."""
         self.user_enabled = True
-        self._save(**{OPT_PV_USER_ENABLED: True})
+        self._save(**{OPT_PV_USER_ENABLED: True, OPT_PV_OWNER: False})
         if self.active:
             self.active = False
             self._restore_user_setpoint()
@@ -170,14 +175,81 @@ class PVHeatingController:
 
     def on_broadcast(self) -> None:
         """Recheck eligibility after a controller state change or reconnect."""
-        if self._startup_heater_check_pending and self.coordinator.data is not None:
-            heater_enabled = self.coordinator.adapter.is_heater_enabled(
-                self.coordinator.data
-            )
-            if heater_enabled is not None:
-                self._startup_heater_check_pending = False
-                if self.user_enabled is False and heater_enabled:
-                    self._submit_heater(False)
+        data = self.coordinator.data
+        if data is None:
+            return
+        heater_enabled = self.coordinator.adapter.is_heater_enabled(data)
+        setpoint = data.get("setpoint")
+        previous_heater = self._last_heater_enabled
+        previous_setpoint = self._last_setpoint
+
+        if (
+            setpoint is not None
+            and previous_setpoint is not None
+            and setpoint != previous_setpoint
+        ):
+            if self.active and setpoint != self.setpoint:
+                self.active = False
+                self.restoring_user_target = False
+                self.user_setpoint = setpoint
+                self.user_enabled = True
+                self._save(
+                    **{
+                        OPT_PV_USER_SETPOINT: setpoint,
+                        OPT_PV_USER_ENABLED: True,
+                        OPT_PV_OWNER: False,
+                    }
+                )
+                self._notify()
+            elif not self.active and not self.restoring_user_target:
+                self.user_setpoint = setpoint
+                self._save(**{OPT_PV_USER_SETPOINT: setpoint})
+
+        if self._startup_heater_check_pending and heater_enabled is not None:
+            self._startup_heater_check_pending = False
+            if (
+                self.user_enabled is False
+                and heater_enabled
+                and self._pv_owned_before_restart is not False
+            ):
+                self._submit_heater(False)
+            elif heater_enabled and self._pv_owned_before_restart is False:
+                self.user_enabled = True
+                self._save(**{OPT_PV_USER_ENABLED: True})
+                self._notify()
+            elif not heater_enabled and self.user_enabled is True:
+                self.user_enabled = False
+                self._save(**{OPT_PV_USER_ENABLED: False})
+                self._notify()
+            if not heater_enabled and self._pv_owned_before_restart is not False:
+                self._pv_owned_before_restart = False
+                self._save(**{OPT_PV_OWNER: False})
+        elif previous_heater is not None and heater_enabled != previous_heater:
+            if heater_enabled:
+                if not self._pv_heater_on_sent:
+                    self.user_enabled = True
+                    self._save(**{OPT_PV_USER_ENABLED: True, OPT_PV_OWNER: False})
+                    if self.active:
+                        self.active = False
+                        self._restore_user_setpoint()
+                    self._notify()
+                self._pv_heater_on_sent = False
+            else:
+                self._pv_heater_on_sent = False
+                if self._pv_owned_before_restart is not False:
+                    self._pv_owned_before_restart = False
+                    self._save(**{OPT_PV_OWNER: False})
+                if self.user_enabled is True:
+                    self.user_enabled = False
+                    self._save(**{OPT_PV_USER_ENABLED: False})
+                    self._notify()
+                if self.active:
+                    self.active = False
+                    self._save(**{OPT_PV_OWNER: False})
+                    self._notify()
+
+        self._last_heater_enabled = heater_enabled
+        self._last_setpoint = setpoint
         if self.active or (self.enabled and self.released):
             self._reconcile()
         if (
@@ -199,6 +271,7 @@ class PVHeatingController:
                 self.user_setpoint = int(data["setpoint"])
                 self._save(**{OPT_PV_USER_SETPOINT: self.user_setpoint})
             self.active = True
+            self._save(**{OPT_PV_OWNER: True})
             self.restoring_user_target = False
             target = self.setpoint
             if target is None:
@@ -209,6 +282,7 @@ class PVHeatingController:
             self._submit_heater(True)
         elif not should_control and self.active:
             self.active = False
+            self._save(**{OPT_PV_OWNER: False})
             self._submit_heater(False)
             self._restore_user_setpoint()
         if self.active != was_active:
@@ -226,6 +300,8 @@ class PVHeatingController:
         self.released = False
         self.release_requested = False
         self.active = False
+        self._save(**{OPT_PV_OWNER: False})
+        self._pv_heater_on_sent = False
         self._submit_heater(False)
         self._restore_user_setpoint()
         self._notify()
@@ -257,6 +333,8 @@ class PVHeatingController:
                 return None
             if coordinator.adapter.is_heater_enabled(data) == on:
                 return None
+            if on:
+                self._pv_heater_on_sent = True
             return coordinator.adapter.build_heater_command(on=on)
 
         coordinator.intent_queue.submit(

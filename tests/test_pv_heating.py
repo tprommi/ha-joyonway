@@ -97,6 +97,129 @@ def test_first_broadcast_disarms_orphaned_pv_heater(
         ) == coordinator.adapter.build_heater_command(on=False)
 
 
+def test_restart_treats_non_pv_heater_as_user_control() -> None:
+    coordinator = FakeCoordinator(heater_enabled=True)
+    coordinator.entry.options = {
+        "pv_heating_enabled": True,
+        "pv_user_heater_enabled": False,
+        "pv_heating_owned": False,
+    }
+    pv = PVHeatingController(coordinator)
+
+    pv.on_broadcast()
+
+    assert pv.released is False
+    assert pv.user_enabled is True
+    assert coordinator.intent_queue.commands == []
+
+
+def test_restart_keeps_pv_ownership_until_heater_is_off() -> None:
+    coordinator = FakeCoordinator(heater_enabled=True)
+    coordinator.entry.options = {
+        "pv_heating_enabled": True,
+        "pv_user_heater_enabled": False,
+        "pv_heating_owned": True,
+    }
+    pv = PVHeatingController(coordinator)
+
+    pv.on_broadcast()
+    assert coordinator.entry.options["pv_heating_owned"] is True
+    assert coordinator.intent_queue.commands[-1][0] == "heater"
+
+    coordinator.data["heater_enabled"] = False
+    pv.on_broadcast()
+    assert coordinator.entry.options["pv_heating_owned"] is False
+
+
+def test_display_setpoint_takes_priority_over_pv() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_setpoint(38)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+
+    coordinator.data["setpoint"] = 38
+    pv.on_broadcast()
+    assert pv.active
+    assert pv.user_setpoint == 32
+
+    coordinator.data["setpoint"] = 35
+    pv.on_broadcast()
+    assert not pv.active
+    assert pv.user_enabled is True
+    assert pv.user_setpoint == 35
+    assert coordinator.entry.options["pv_heating_owned"] is False
+
+
+def test_display_heater_on_is_not_mistaken_for_pv_confirmation() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+
+    coordinator.data["heater_enabled"] = True
+    pv.on_broadcast()
+    assert not pv.active
+    assert pv.user_enabled is True
+    assert coordinator.entry.options["pv_heating_owned"] is False
+
+
+def test_pv_heater_confirmation_keeps_pv_ownership() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+    pv_command = coordinator.intent_queue.commands[-1]
+    assert pv_command[2]({"heater_enabled": True}, coordinator.data) is not None
+
+    coordinator.data["heater_enabled"] = True
+    pv.on_broadcast()
+    assert pv.active
+    assert pv.user_enabled is False
+    assert coordinator.entry.options["pv_heating_owned"] is True
+
+
+def test_display_heater_off_allows_pv_to_take_over_again() -> None:
+    coordinator = FakeCoordinator(heater_enabled=True)
+    coordinator.entry.options = {"pv_user_heater_enabled": True}
+    pv = PVHeatingController(coordinator)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+    assert not pv.active
+
+    coordinator.data["heater_enabled"] = False
+    pv.on_broadcast()
+    assert pv.user_enabled is False
+    assert pv.active
+    assert coordinator.entry.options["pv_heating_owned"] is True
+
+
+def test_display_off_during_pv_requests_heater_again() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+    pv_command = coordinator.intent_queue.commands[-1]
+    pv_command[2]({"heater_enabled": True}, coordinator.data)
+    coordinator.data["heater_enabled"] = True
+    pv.on_broadcast()
+
+    coordinator.data["heater_enabled"] = False
+    pv.on_broadcast()
+
+    assert pv.active
+    assert pv.user_enabled is False
+    assert coordinator.intent_queue.commands[-1][0] == "heater"
+    assert coordinator.intent_queue.commands[-1][2](
+        {"heater_enabled": True}, coordinator.data
+    ) == coordinator.adapter.build_heater_command(on=True)
+
+
 @pytest.mark.parametrize("user_enabled", [False, True, None])
 def test_disabling_pv_after_restart_respects_user_thermostat(
     user_enabled: bool | None,
