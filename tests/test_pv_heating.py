@@ -97,7 +97,7 @@ def test_first_broadcast_disarms_orphaned_pv_heater(
         ) == coordinator.adapter.build_heater_command(on=False)
 
 
-def test_restart_treats_non_pv_heater_as_user_control() -> None:
+def test_restart_preserves_saved_user_off_even_without_pv_ownership() -> None:
     coordinator = FakeCoordinator(heater_enabled=True)
     coordinator.entry.options = {
         "pv_heating_enabled": True,
@@ -109,8 +109,10 @@ def test_restart_treats_non_pv_heater_as_user_control() -> None:
     pv.on_broadcast()
 
     assert pv.released is False
-    assert pv.user_enabled is True
-    assert coordinator.intent_queue.commands == []
+    assert pv.user_enabled is False
+    assert [command[0] for command in coordinator.intent_queue.commands] == [
+        "heater"
+    ]
 
 
 def test_restart_keeps_pv_ownership_until_heater_is_off() -> None:
