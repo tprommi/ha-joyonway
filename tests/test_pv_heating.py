@@ -28,7 +28,15 @@ class FakeIntentQueue:
     def __init__(self) -> None:
         self.commands: list[tuple[str, dict, object, object]] = []
 
-    def submit(self, group, overrides, build_fn, on_failure=None) -> None:
+    def submit(
+        self,
+        group,
+        overrides,
+        build_fn,
+        on_failure=None,
+        verify_fn=None,
+        wait_for_confirmation=True,
+    ) -> None:
         self.commands.append((group, overrides, build_fn, on_failure))
 
 
@@ -133,6 +141,69 @@ def test_restart_keeps_pv_ownership_until_heater_is_off() -> None:
     assert coordinator.entry.options["pv_heating_owned"] is False
 
 
+def test_restart_restores_saved_active_pv_heating() -> None:
+    coordinator = FakeCoordinator(heater_enabled=False)
+    coordinator.entry.options = {
+        "pv_heating_enabled": True,
+        "pv_heating_active": True,
+        "pv_heating_setpoint": 38,
+        "pv_user_heater_enabled": False,
+    }
+    pv = PVHeatingController(coordinator)
+
+    assert pv.active is False
+    assert pv.released is True
+    pv.on_broadcast()
+
+    assert pv.active is True
+    assert [command[0] for command in coordinator.intent_queue.commands] == [
+        "setpoint",
+        "heater",
+    ]
+    assert coordinator.intent_queue.commands[0][1] == {"setpoint": 38}
+    assert coordinator.intent_queue.commands[1][1] == {"heater_enabled": True}
+    assert coordinator.entry.options["pv_heating_active"] is True
+
+
+def test_restart_does_not_restore_saved_pv_when_feature_was_disabled() -> None:
+    coordinator = FakeCoordinator(heater_enabled=False)
+    coordinator.entry.options = {
+        "pv_heating_enabled": False,
+        "pv_heating_active": True,
+        "pv_heating_setpoint": 38,
+        "pv_user_heater_enabled": False,
+    }
+    pv = PVHeatingController(coordinator)
+
+    pv.on_broadcast()
+
+    assert pv.active is False
+    assert pv.released is False
+    assert coordinator.entry.options["pv_heating_active"] is False
+    assert coordinator.intent_queue.commands == []
+
+
+def test_restart_gives_saved_user_thermostat_priority_over_saved_pv() -> None:
+    coordinator = FakeCoordinator(heater_enabled=True)
+    coordinator.entry.options = {
+        "pv_heating_enabled": True,
+        "pv_heating_active": True,
+        "pv_heating_setpoint": 38,
+        "pv_user_heater_enabled": True,
+        "pv_user_setpoint": 35,
+    }
+    pv = PVHeatingController(coordinator)
+
+    pv.on_broadcast()
+
+    assert pv.active is False
+    assert pv.released is False
+    assert coordinator.entry.options["pv_heating_active"] is False
+    assert [command[0] for command in coordinator.intent_queue.commands] == [
+        "setpoint"
+    ]
+
+
 def test_display_setpoint_takes_priority_over_pv() -> None:
     coordinator = FakeCoordinator()
     pv = PVHeatingController(coordinator)
@@ -163,9 +234,9 @@ def test_display_heater_on_is_not_mistaken_for_pv_confirmation() -> None:
 
     coordinator.data["heater_enabled"] = True
     pv.on_broadcast()
-    assert not pv.active
-    assert pv.user_enabled is True
-    assert coordinator.entry.options["pv_heating_owned"] is False
+    assert pv.active
+    assert pv.user_enabled is False
+    assert coordinator.entry.options["pv_heating_owned"] is True
 
 
 def test_pv_heater_confirmation_keeps_pv_ownership() -> None:
@@ -206,7 +277,11 @@ def test_heater_armed_by_pv_setpoint_keeps_pv_ownership() -> None:
 
 def test_display_heater_off_allows_pv_to_take_over_again() -> None:
     coordinator = FakeCoordinator(heater_enabled=True)
-    coordinator.entry.options = {"pv_user_heater_enabled": True}
+    coordinator.entry.options = {
+        "pv_user_heater_enabled": True,
+        "pv_user_setpoint": 35,
+        "pv_heating_setpoint": 38,
+    }
     pv = PVHeatingController(coordinator)
     pv.set_enabled(True)
     pv.set_release(True)
@@ -224,6 +299,8 @@ def test_display_off_during_pv_requests_heater_again() -> None:
     coordinator = FakeCoordinator()
     pv = PVHeatingController(coordinator)
     pv.set_enabled(True)
+    pv.set_delay(on=True, value=0)
+    pv.set_setpoint(38)
     pv.set_release(True)
     pv.on_broadcast()
     pv_command = coordinator.intent_queue.commands[-1]
@@ -322,15 +399,29 @@ def test_pv_requires_all_conditions_and_keeps_user_target() -> None:
     pv.set_user_setpoint(34)
     assert pv.user_setpoint == 34
     assert coordinator.entry.options["pv_user_setpoint"] == 34
+    commands_before_release = len(coordinator.intent_queue.commands)
     pv.set_release(False)
     assert not pv.active
-    assert [command[0] for command in coordinator.intent_queue.commands[-2:]] == [
-        "heater",
-        "setpoint",
-    ]
-    assert coordinator.intent_queue.commands[-1][2](
-        {"setpoint": 34}, {"setpoint": 38}
-    ) == coordinator.adapter.build_temp_command(34)
+    assert pv.user_enabled is False
+    assert pv.user_setpoint == 34
+    assert len(coordinator.intent_queue.commands) == commands_before_release
+
+
+def test_revoking_pv_release_does_not_change_user_thermostat_or_setpoint() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_setpoint(38)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    assert pv.active
+
+    commands_before_release = len(coordinator.intent_queue.commands)
+    pv.set_release(False)
+
+    assert pv.active is False
+    assert pv.user_enabled is False
+    assert pv.user_setpoint == 32
+    assert len(coordinator.intent_queue.commands) == commands_before_release
 
 
 @pytest.mark.parametrize(
@@ -353,7 +444,10 @@ def test_pv_does_not_take_over_user_or_unavailable_spa(
 
 def test_pv_waits_for_physical_heater_off_even_with_saved_user_off() -> None:
     coordinator = FakeCoordinator(heater_enabled=True)
-    coordinator.entry.options = {"pv_user_heater_enabled": False}
+    coordinator.entry.options = {
+        "pv_user_heater_enabled": False,
+        "pv_heating_setpoint": 38,
+    }
     pv = PVHeatingController(coordinator)
     pv.set_enabled(True)
     pv.set_release(True)
@@ -383,8 +477,10 @@ def test_pv_can_take_over_after_connection_returns() -> None:
     coordinator = FakeCoordinator()
     coordinator.is_connected = False
     pv = PVHeatingController(coordinator)
+    pv.set_setpoint(38)
     pv.set_enabled(True)
     pv.set_release(True)
+    pv.set_setpoint(38)
     assert not pv.active
 
     coordinator.is_connected = True
@@ -483,6 +579,8 @@ async def test_pv_waits_until_user_off_command_is_confirmed() -> None:
     climate.async_write_ha_state = lambda: None
 
     pv.set_enabled(True)
+    pv.set_delay(on=True, value=0)
+    pv.set_setpoint(38)
     pv.set_release(True)
     assert not pv.active
     await climate.async_set_hvac_mode(HVACMode.OFF)
