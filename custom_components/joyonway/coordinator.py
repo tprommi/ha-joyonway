@@ -462,6 +462,7 @@ class JoyonwayCoordinator(DataUpdateCoordinator):
     async def async_shutdown(self) -> None:
         """Close connection on shutdown."""
         self._stopped = True
+        self.pv_heating.shutdown()
         if self._clock_check_unsub is not None:
             self._clock_check_unsub()
             self._clock_check_unsub = None

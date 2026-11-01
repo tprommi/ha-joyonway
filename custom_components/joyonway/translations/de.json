@@ -169,7 +169,9 @@
     "number": {
       "pv_heating_setpoint": {
         "name": "PV-Heizen Solltemperatur"
-      }
+      },
+      "pv_heating_on_delay": { "name": "PV-Heizung Einschaltverzögerung" },
+      "pv_heating_off_delay": { "name": "PV-Heizung Ausschaltverzögerung" }
     },
     "time": {
       "heat_slot1_start": {

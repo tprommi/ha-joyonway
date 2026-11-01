@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -63,6 +64,35 @@ def test_pv_never_sends_on_startup(heater_enabled: bool) -> None:
     assert pv.released is False
     assert pv.active is False
     assert coordinator.intent_queue.commands == []
+
+
+@pytest.mark.asyncio
+async def test_pv_release_delays_and_cancels_pending_change() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    assert (pv.on_delay, pv.off_delay) == (60, 60)
+    pv.set_enabled(True)
+    pv.set_delay(on=True, value=1)
+    pv.set_delay(on=False, value=1)
+
+    pv.request_release(True)
+    assert pv.release_requested is True
+    assert pv.released is False
+    assert not pv.active
+    pv.request_release(False)
+    await asyncio.sleep(0)
+    assert pv.released is False
+    assert coordinator.intent_queue.commands == []
+
+    pv.request_release(True)
+    await asyncio.sleep(1.05)
+    assert pv.released is True
+    assert pv.active
+    pv.request_release(False)
+    assert pv.released is True
+    await asyncio.sleep(1.05)
+    assert pv.released is False
+    assert not pv.active
 
 
 def test_pv_requires_all_conditions_and_keeps_user_target() -> None:

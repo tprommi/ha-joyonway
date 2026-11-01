@@ -114,7 +114,9 @@
       "filter_slot2_enabled": { "name": "Filter slot 2" }
     },
     "number": {
-      "pv_heating_setpoint": { "name": "PV heating target temperature" }
+      "pv_heating_setpoint": { "name": "PV heating target temperature" },
+      "pv_heating_on_delay": { "name": "PV heating on delay" },
+      "pv_heating_off_delay": { "name": "PV heating off delay" }
     },
     "time": {
       "heat_slot1_start": { "name": "Heat slot 1 begin" },
