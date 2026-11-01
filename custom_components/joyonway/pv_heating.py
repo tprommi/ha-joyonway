@@ -56,6 +56,7 @@ class PVHeatingController:
         self._last_setpoint: int | None = None
         self._pv_heater_on_expected = False
         self._waiting_for_heater_off = False
+        self._ignore_pv_setpoint_echo = False
 
     def _notify(self) -> None:
         self.coordinator.async_update_listeners()
@@ -198,6 +199,15 @@ class PVHeatingController:
         setpoint = data.get("setpoint")
         previous_heater = self._last_heater_enabled
         previous_setpoint = self._last_setpoint
+        pv_setpoint_echo = (
+            self._ignore_pv_setpoint_echo and setpoint == self.setpoint
+        )
+        if pv_setpoint_echo or (
+            self._ignore_pv_setpoint_echo
+            and previous_setpoint is not None
+            and setpoint != previous_setpoint
+        ):
+            self._ignore_pv_setpoint_echo = False
 
         if (
             setpoint is not None
@@ -219,7 +229,7 @@ class PVHeatingController:
                     }
                 )
                 self._notify()
-            elif not self.active and not self.restoring_user_target:
+            elif not self.active and not self.restoring_user_target and not pv_setpoint_echo:
                 self.user_setpoint = setpoint
                 self._save(**{OPT_PV_USER_SETPOINT: setpoint})
 
@@ -340,6 +350,7 @@ class PVHeatingController:
         elif not should_control and self.active:
             self.active = False
             self._pv_heater_on_expected = False
+            self._ignore_pv_setpoint_echo = True
             self._save(**{OPT_PV_OWNER: False, OPT_PV_ACTIVE: False})
             # PV armed the physical heater, so disarm it when PV control ends.
             # Keep the user's thermostat mode and target untouched.

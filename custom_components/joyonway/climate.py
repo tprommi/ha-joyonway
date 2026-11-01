@@ -168,7 +168,7 @@ class SpaClimate(JoyonwayCoordinatorEntity, ClimateEntity):
         if self._pending_temp is not None:
             return float(self._pending_temp)
         pv = self.coordinator.pv_heating
-        if (pv.active or pv.restoring_user_target) and pv.user_setpoint is not None:
+        if pv.user_setpoint is not None:
             return float(pv.user_setpoint)
         if self.coordinator.data is None:
             return None
