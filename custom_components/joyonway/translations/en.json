@@ -88,7 +88,8 @@
       "activity_byte_raw": { "name": "Activity byte (raw)" },
       "light_cycle_byte_raw": { "name": "Light/cycle byte (raw)" },
       "frame_length": { "name": "Frame length" },
-      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
+      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" },
+      "calculated_power": { "name": "Calculated power" }
     },
     "binary_sensor": {
       "bridge_connectivity": { "name": "RS485 bridge" }
@@ -109,6 +110,13 @@
       "heat_slot2_enabled": { "name": "Heat slot 2" },
       "filter_slot1_enabled": { "name": "Filter slot 1" },
       "filter_slot2_enabled": { "name": "Filter slot 2" }
+    },
+    "number": {
+      "power_pump_low": { "name": "Pump low / circulation power" },
+      "power_pump_high": { "name": "Pump high power" },
+      "power_heating": { "name": "Heating power" },
+      "power_ozone": { "name": "Ozone power" },
+      "power_light": { "name": "Light power" }
     },
     "time": {
       "heat_slot1_start": { "name": "Heat slot 1 begin" },

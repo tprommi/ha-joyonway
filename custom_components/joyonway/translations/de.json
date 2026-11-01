@@ -107,6 +107,9 @@
       },
       "unmapped_bytes_hash": {
         "name": "Hash der nicht gemappten Bytes"
+      },
+      "calculated_power": {
+        "name": "Berechnete Leistung"
       }
     },
     "binary_sensor": {
@@ -177,6 +180,13 @@
       "filter_slot2_enabled": {
         "name": "Filter-Slot 2"
       }
+    },
+    "number": {
+      "power_pump_low": { "name": "Leistung Düsen niedrig / Zirkulation" },
+      "power_pump_high": { "name": "Leistung Düsen hoch" },
+      "power_heating": { "name": "Heizleistung" },
+      "power_ozone": { "name": "Ozonleistung" },
+      "power_light": { "name": "Lichtleistung" }
     },
     "time": {
       "heat_slot1_start": {

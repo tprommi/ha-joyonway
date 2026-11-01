@@ -88,7 +88,8 @@
       "activity_byte_raw": { "name": "Activity byte (raw)" },
       "light_cycle_byte_raw": { "name": "Light/cycle byte (raw)" },
       "frame_length": { "name": "Frame length" },
-      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
+      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" },
+      "calculated_power": { "name": "Calculated power" }
     },
     "binary_sensor": {
       "bridge_connectivity": { "name": "RS485 bridge" },
@@ -99,6 +100,13 @@
       "blower_active": { "name": "Blower active" },
       "jets_active": { "name": "Jets active" },
       "light_active": { "name": "Light active" }
+    },
+    "number": {
+      "power_pump_low": { "name": "Pump low or circulation power" },
+      "power_pump_high": { "name": "Pump high power" },
+      "power_heating": { "name": "Heating power" },
+      "power_ozone": { "name": "Ozone power" },
+      "power_light": { "name": "Light power" }
     },
     "fan": {
       "jets": { "name": "Jets" },
