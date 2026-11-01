@@ -321,6 +321,7 @@ class PVHeatingSetpoint(JoyonwayCoordinatorEntity, NumberEntity):
     """Independent PV target temperature."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "pv_heating_setpoint"
     _attr_icon = "mdi:thermometer-chevron-up"
     _attr_device_class = NumberDeviceClass.TEMPERATURE
