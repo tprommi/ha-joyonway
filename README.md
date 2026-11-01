@@ -142,6 +142,7 @@ If PV heating is explicitly switched off after such a restart, the integration a
 | **Heating element active** (Binary Sensor) | Controller feedback that the heating element relay is active |
 | **Status** | Current operational status (`off`, `standby`, `circulation`, `heating`, `ozone`) with dynamic icons |
 | **Jets** | Current jets speed state (`off`, `low`, `high`) |
+| **Calculated power** | Estimated active power in watts, calculated from the active spa components |
 
 ### Configuration
 
@@ -156,6 +157,13 @@ These entities allow managing the schedules and operating modes of the spa:
 | **Filter slot 1/2** | Switch | Enable/disable filtration schedule slots |
 | **Heat slot 1/2 begin/end** | Time | Heating schedule start and end times (HH:MM) |
 | **Filter slot 1/2 begin/end** | Time | Filtration schedule start and end times (HH:MM) |
+| **Pump low / circulation power** | Number | Estimated watts while jets are low or circulation is active (default: 370 W) |
+| **Pump high power** | Number | Estimated watts while jets are high (default: 2100 W) |
+| **Heating power** | Number | Estimated watts while heating is active (default: 2780 W) |
+| **Ozone power** | Number | Estimated watts while ozone is active (default: 20 W) |
+| **Light power** | Number | Estimated watts while the light is active (default: 5 W) |
+
+The calculated power is an estimate based on these configurable component values, not a measured electrical reading. The defaults match the former Home Assistant template calculation.
 
 ### Diagnostics
 

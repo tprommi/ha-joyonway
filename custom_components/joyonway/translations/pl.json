@@ -88,7 +88,8 @@
       "activity_byte_raw": { "name": "Bajt aktywności (surowy)" },
       "light_cycle_byte_raw": { "name": "Bajt światła/cyklu (surowy)" },
       "frame_length": { "name": "Długość ramki" },
-      "unmapped_bytes_hash": { "name": "Hash niezmapowanych bajtów" }
+      "unmapped_bytes_hash": { "name": "Hash niezmapowanych bajtów" },
+      "calculated_power": { "name": "Obliczona moc" }
     },
     "binary_sensor": {
       "pv_heating_active": { "name": "Ogrzewanie PV aktywne" },
@@ -117,7 +118,12 @@
     "number": {
       "pv_heating_setpoint": { "name": "Temperatura docelowa ogrzewania PV" },
       "pv_heating_on_delay": { "name": "Opóźnienie włączenia ogrzewania PV" },
-      "pv_heating_off_delay": { "name": "Opóźnienie wyłączenia ogrzewania PV" }
+      "pv_heating_off_delay": { "name": "Opóźnienie wyłączenia ogrzewania PV" },
+      "power_pump_low": { "name": "Moc dysz niska / cyrkulacji" },
+      "power_pump_high": { "name": "Moc dysz wysoka" },
+      "power_heating": { "name": "Moc grzania" },
+      "power_ozone": { "name": "Moc ozonowania" },
+      "power_light": { "name": "Moc oświetlenia" }
     },
     "time": {
       "heat_slot1_start": { "name": "Początek przedziału ogrzewania 1" },

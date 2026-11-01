@@ -19,7 +19,8 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .adapters.base import SpaEntityDescription
-from .coordinator import JoyonwayCoordinator, JoyonwayConfigEntry
+from .calculated_power import CalculatedPowerSensor
+from .coordinator import JoyonwayConfigEntry, JoyonwayCoordinator
 from .entity import JoyonwayCoordinatorEntity, device_info
 
 
@@ -37,6 +38,7 @@ async def async_setup_entry(
         for desc in descriptions
         if desc.platform == "sensor"
     ]
+    entities.append(CalculatedPowerSensor(coordinator, entry))
     async_add_entities(entities)
 
 

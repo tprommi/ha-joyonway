@@ -107,7 +107,8 @@
       },
       "unmapped_bytes_hash": {
         "name": "Hash der nicht gemappten Bytes"
-      }
+      },
+      "calculated_power": { "name": "Berechnete Leistung" }
     },
     "binary_sensor": {
       "bridge_connectivity": {
@@ -192,7 +193,12 @@
         "name": "PV-Heizen Solltemperatur"
       },
       "pv_heating_on_delay": { "name": "PV-Heizung Einschaltverzögerung" },
-      "pv_heating_off_delay": { "name": "PV-Heizung Ausschaltverzögerung" }
+      "pv_heating_off_delay": { "name": "PV-Heizung Ausschaltverzögerung" },
+      "power_pump_low": { "name": "Leistung Düsen niedrig / Zirkulation" },
+      "power_pump_high": { "name": "Leistung Düsen hoch" },
+      "power_heating": { "name": "Heizleistung" },
+      "power_ozone": { "name": "Ozonleistung" },
+      "power_light": { "name": "Lichtleistung" }
     },
     "time": {
       "heat_slot1_start": {

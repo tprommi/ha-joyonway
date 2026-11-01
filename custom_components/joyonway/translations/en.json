@@ -88,7 +88,8 @@
       "activity_byte_raw": { "name": "Activity byte (raw)" },
       "light_cycle_byte_raw": { "name": "Light/cycle byte (raw)" },
       "frame_length": { "name": "Frame length" },
-      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" }
+      "unmapped_bytes_hash": { "name": "Unmapped bytes hash" },
+      "calculated_power": { "name": "Calculated power" }
     },
     "binary_sensor": {
       "pv_heating_active": { "name": "PV heating active" },
@@ -117,7 +118,12 @@
     "number": {
       "pv_heating_setpoint": { "name": "PV heating target temperature" },
       "pv_heating_on_delay": { "name": "PV heating on delay" },
-      "pv_heating_off_delay": { "name": "PV heating off delay" }
+      "pv_heating_off_delay": { "name": "PV heating off delay" },
+      "power_pump_low": { "name": "Pump low / circulation power" },
+      "power_pump_high": { "name": "Pump high power" },
+      "power_heating": { "name": "Heating power" },
+      "power_ozone": { "name": "Ozone power" },
+      "power_light": { "name": "Light power" }
     },
     "time": {
       "heat_slot1_start": { "name": "Heat slot 1 begin" },

@@ -88,7 +88,8 @@
       "activity_byte_raw": { "name": "Octet activité (brut)" },
       "light_cycle_byte_raw": { "name": "Octet lumière/cycle (brut)" },
       "frame_length": { "name": "Longueur de trame" },
-      "unmapped_bytes_hash": { "name": "Hachage des octets non mappés" }
+      "unmapped_bytes_hash": { "name": "Hachage des octets non mappés" },
+      "calculated_power": { "name": "Puissance calculée" }
     },
     "binary_sensor": {
       "pv_heating_active": { "name": "Chauffage photovoltaïque actif" },
@@ -117,7 +118,12 @@
     "number": {
       "pv_heating_setpoint": { "name": "Température cible du chauffage photovoltaïque" },
       "pv_heating_on_delay": { "name": "Délai d’activation du chauffage PV" },
-      "pv_heating_off_delay": { "name": "Délai de désactivation du chauffage PV" }
+      "pv_heating_off_delay": { "name": "Délai de désactivation du chauffage PV" },
+      "power_pump_low": { "name": "Puissance pompe basse / circulation" },
+      "power_pump_high": { "name": "Puissance pompe haute" },
+      "power_heating": { "name": "Puissance chauffage" },
+      "power_ozone": { "name": "Puissance ozone" },
+      "power_light": { "name": "Puissance éclairage" }
     },
     "time": {
       "heat_slot1_start": { "name": "Chauffage créneau 1 début" },

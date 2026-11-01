@@ -12,6 +12,11 @@ CONF_MODEL: str = "model"
 # Options keys
 OPT_OZONE_MODE: str = "ozone_mode"
 OPT_AUTO_SYNC_CLOCK: str = "auto_sync_clock"
+OPT_POWER_PUMP_LOW: str = "power_pump_low"
+OPT_POWER_PUMP_HIGH: str = "power_pump_high"
+OPT_POWER_HEATING: str = "power_heating"
+OPT_POWER_OZONE: str = "power_ozone"
+OPT_POWER_LIGHT: str = "power_light"
 
 # Option values
 OZONE_MODE_AUTO: str = "auto"
