@@ -341,8 +341,10 @@ class PVHeatingController:
             self.active = False
             self._pv_heater_on_expected = False
             self._save(**{OPT_PV_OWNER: False, OPT_PV_ACTIVE: False})
-            # Revoking PV surplus permission only ends PV ownership. Do not
-            # change the user's thermostat or target as a side effect.
+            # PV armed the physical heater, so disarm it when PV control ends.
+            # Keep the user's thermostat mode and target untouched.
+            if self.user_enabled is False:
+                self._submit_heater(False)
         elif not should_control and self.enabled and self.released:
             self._waiting_for_heater_off = True
         if self.active != was_active:

@@ -404,10 +404,12 @@ def test_pv_requires_all_conditions_and_keeps_user_target() -> None:
     assert not pv.active
     assert pv.user_enabled is False
     assert pv.user_setpoint == 34
-    assert len(coordinator.intent_queue.commands) == commands_before_release
+    assert len(coordinator.intent_queue.commands) == commands_before_release + 1
+    assert coordinator.intent_queue.commands[-1][0] == "heater"
+    assert coordinator.intent_queue.commands[-1][1] == {"heater_enabled": False}
 
 
-def test_revoking_pv_release_does_not_change_user_thermostat_or_setpoint() -> None:
+def test_revoking_pv_release_disarms_heater_without_changing_user_thermostat() -> None:
     coordinator = FakeCoordinator()
     pv = PVHeatingController(coordinator)
     pv.set_setpoint(38)
@@ -421,7 +423,11 @@ def test_revoking_pv_release_does_not_change_user_thermostat_or_setpoint() -> No
     assert pv.active is False
     assert pv.user_enabled is False
     assert pv.user_setpoint == 32
-    assert len(coordinator.intent_queue.commands) == commands_before_release
+    assert len(coordinator.intent_queue.commands) == commands_before_release + 1
+    assert coordinator.intent_queue.commands[-1][0] == "heater"
+    assert coordinator.intent_queue.commands[-1][2](
+        {"heater_enabled": False}, {"heater_enabled": True, "setpoint": 38}
+    ) == coordinator.adapter.build_heater_command(on=False)
 
 
 @pytest.mark.parametrize(
@@ -498,8 +504,8 @@ def test_pv_relinquishes_control_when_manual_mode_is_removed() -> None:
     coordinator.heater_mode = "auto"
     pv.on_broadcast()
     assert not pv.active
-    assert coordinator.intent_queue.commands[-2][0] == "heater"
-    assert coordinator.intent_queue.commands[-1][0] == "setpoint"
+    assert coordinator.intent_queue.commands[-1][0] == "heater"
+    assert coordinator.intent_queue.commands[-1][1] == {"heater_enabled": False}
 
 
 def test_failed_pv_command_releases_control() -> None:
