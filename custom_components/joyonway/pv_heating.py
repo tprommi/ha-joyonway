@@ -207,21 +207,12 @@ class PVHeatingController:
 
         if self._startup_heater_check_pending and heater_enabled is not None:
             self._startup_heater_check_pending = False
+            if self.user_enabled is False and heater_enabled:
+                self._submit_heater(False)
             if (
-                self.user_enabled is False
-                and heater_enabled
+                (not heater_enabled or self.user_enabled is True)
                 and self._pv_owned_before_restart is not False
             ):
-                self._submit_heater(False)
-            elif heater_enabled and self._pv_owned_before_restart is False:
-                self.user_enabled = True
-                self._save(**{OPT_PV_USER_ENABLED: True})
-                self._notify()
-            elif not heater_enabled and self.user_enabled is True:
-                self.user_enabled = False
-                self._save(**{OPT_PV_USER_ENABLED: False})
-                self._notify()
-            if not heater_enabled and self._pv_owned_before_restart is not False:
                 self._pv_owned_before_restart = False
                 self._save(**{OPT_PV_OWNER: False})
         elif previous_heater is not None and heater_enabled != previous_heater:
