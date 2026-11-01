@@ -115,7 +115,9 @@
       "filter_slot2_enabled": { "name": "Przedział filtrowania 2" }
     },
     "number": {
-      "pv_heating_setpoint": { "name": "Temperatura docelowa ogrzewania PV" }
+      "pv_heating_setpoint": { "name": "Temperatura docelowa ogrzewania PV" },
+      "pv_heating_on_delay": { "name": "Opóźnienie włączenia ogrzewania PV" },
+      "pv_heating_off_delay": { "name": "Opóźnienie wyłączenia ogrzewania PV" }
     },
     "time": {
       "heat_slot1_start": { "name": "Początek przedziału ogrzewania 1" },

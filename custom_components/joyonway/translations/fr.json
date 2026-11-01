@@ -115,7 +115,9 @@
       "filter_slot2_enabled": { "name": "Filtration créneau 2" }
     },
     "number": {
-      "pv_heating_setpoint": { "name": "Température cible du chauffage photovoltaïque" }
+      "pv_heating_setpoint": { "name": "Température cible du chauffage photovoltaïque" },
+      "pv_heating_on_delay": { "name": "Délai d’activation du chauffage PV" },
+      "pv_heating_off_delay": { "name": "Délai de désactivation du chauffage PV" }
     },
     "time": {
       "heat_slot1_start": { "name": "Chauffage créneau 1 début" },

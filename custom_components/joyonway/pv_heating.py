@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import asyncio
 from typing import TYPE_CHECKING, Any
 
 from homeassistant.components.binary_sensor import (
@@ -10,7 +11,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.components.switch import SwitchEntity
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.exceptions import HomeAssistantError
 
 from .entity import JoyonwayCoordinatorEntity, device_info
@@ -23,6 +24,9 @@ OPT_PV_ENABLED = "pv_heating_enabled"
 OPT_PV_SETPOINT = "pv_heating_setpoint"
 OPT_PV_USER_SETPOINT = "pv_user_setpoint"
 OPT_PV_USER_ENABLED = "pv_user_heater_enabled"
+OPT_PV_ON_DELAY = "pv_heating_on_delay"
+OPT_PV_OFF_DELAY = "pv_heating_off_delay"
+DEFAULT_PV_DELAY = 60
 
 
 class PVHeatingController:
@@ -33,6 +37,10 @@ class PVHeatingController:
         options = coordinator.entry.options
         self.enabled = bool(options.get(OPT_PV_ENABLED, False))
         self.released = False
+        self.release_requested = False
+        self._release_timer: asyncio.TimerHandle | None = None
+        self.on_delay = int(options.get(OPT_PV_ON_DELAY, DEFAULT_PV_DELAY))
+        self.off_delay = int(options.get(OPT_PV_OFF_DELAY, DEFAULT_PV_DELAY))
         self.active = False
         self.restoring_user_target = False
         self.setpoint = options.get(OPT_PV_SETPOINT)
@@ -41,6 +49,12 @@ class PVHeatingController:
 
     def _notify(self) -> None:
         self.coordinator.async_update_listeners()
+
+    def shutdown(self) -> None:
+        """Discard a pending release change when the entry unloads."""
+        if self._release_timer is not None:
+            self._release_timer.cancel()
+            self._release_timer = None
 
     def _save(self, **changes: Any) -> None:
         options = {**self.coordinator.entry.options, **changes}
@@ -73,9 +87,38 @@ class PVHeatingController:
         self._reconcile()
         self._notify()
 
+    def request_release(self, released: bool) -> None:
+        if released == self.release_requested:
+            return
+        self.release_requested = released
+        if self._release_timer is not None:
+            self._release_timer.cancel()
+            self._release_timer = None
+        delay = self.on_delay if released else self.off_delay
+        if delay:
+            self._release_timer = asyncio.get_running_loop().call_later(
+                delay, self.set_release, released
+            )
+        else:
+            self.set_release(released)
+        self._notify()
+
     def set_release(self, released: bool) -> None:
+        self._release_timer = None
         self.released = released
         self._reconcile()
+        self._notify()
+
+    def set_delay(self, *, on: bool, value: float) -> None:
+        seconds = round(value)
+        if not 0 <= seconds <= 600:
+            raise HomeAssistantError("PV heating delay must be between 0 and 600 seconds")
+        if on:
+            self.on_delay = seconds
+            self._save(**{OPT_PV_ON_DELAY: seconds})
+        else:
+            self.off_delay = seconds
+            self._save(**{OPT_PV_OFF_DELAY: seconds})
         self._notify()
 
     def set_setpoint(self, value: float) -> None:
@@ -159,6 +202,7 @@ class PVHeatingController:
         if not self.active:
             return
         self.released = False
+        self.release_requested = False
         self.active = False
         self._submit_heater(False)
         self._restore_user_setpoint()
@@ -242,13 +286,13 @@ class PVHeatingReleaseSwitch(JoyonwayCoordinatorEntity, SwitchEntity):
 
     @property
     def is_on(self) -> bool:
-        return self.coordinator.pv_heating.released
+        return self.coordinator.pv_heating.release_requested
 
     async def async_turn_on(self, **kwargs: Any) -> None:
-        self.coordinator.pv_heating.set_release(True)
+        self.coordinator.pv_heating.request_release(True)
 
     async def async_turn_off(self, **kwargs: Any) -> None:
-        self.coordinator.pv_heating.set_release(False)
+        self.coordinator.pv_heating.request_release(False)
 
 
 class PVHeatingActiveSensor(JoyonwayCoordinatorEntity, BinarySensorEntity):
@@ -300,3 +344,33 @@ class PVHeatingSetpoint(JoyonwayCoordinatorEntity, NumberEntity):
 
     async def async_set_native_value(self, value: float) -> None:
         self.coordinator.pv_heating.set_setpoint(value)
+
+
+class PVHeatingDelay(JoyonwayCoordinatorEntity, NumberEntity):
+    """Configurable delay before accepting or revoking PV release."""
+
+    _attr_has_entity_name = True
+    _attr_device_class = NumberDeviceClass.DURATION
+    _attr_native_unit_of_measurement = UnitOfTime.SECONDS
+    _attr_native_min_value = 0
+    _attr_native_max_value = 600
+    _attr_native_step = 10
+    _attr_icon = "mdi:timer-outline"
+
+    def __init__(
+        self, coordinator: JoyonwayCoordinator, entry: JoyonwayConfigEntry, *, on: bool
+    ) -> None:
+        super().__init__(coordinator)
+        self._on = on
+        key = "pv_heating_on_delay" if on else "pv_heating_off_delay"
+        self._attr_unique_id = f"{entry.entry_id}_{key}"
+        self._attr_translation_key = key
+        self._attr_device_info = device_info(entry)
+
+    @property
+    def native_value(self) -> float:
+        pv = self.coordinator.pv_heating
+        return pv.on_delay if self._on else pv.off_delay
+
+    async def async_set_native_value(self, value: float) -> None:
+        self.coordinator.pv_heating.set_delay(on=self._on, value=value)

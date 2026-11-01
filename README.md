@@ -121,7 +121,11 @@ PV heating uses a separate target temperature and only takes over when the user 
 | **PV heating** | Switch | Master enable for the feature |
 | **PV surplus release** | Switch | Permission controlled by an external automation or process |
 | **PV heating target temperature** | Number | Independent PV target, within the controller's supported range |
+| **PV heating on delay** | Number | Delay before accepting PV surplus release, default 60 seconds |
+| **PV heating off delay** | Number | Delay before revoking PV surplus release, default 60 seconds |
 | **PV heating active** | Binary sensor | PV control currently owns the heater; it does not mean the heating element is firing |
+
+The PV surplus release switch shows the requested state immediately. The integration applies it after the configured on or off delay; reversing the switch during that time cancels the pending change. Both delays accept 0–600 seconds and default to 60 seconds. External surplus automations should switch the release as soon as their threshold changes, without an additional `for:` delay. A pending change is discarded when the integration unloads or Home Assistant restarts.
 
 On takeover, the integration remembers the user's target, then sends the PV target and enables the heater through the normal intent queue. The user thermostat continues to show **Off** and retains its own target. Turning the user thermostat **On** takes priority and restores its target. Revoking release or disabling PV heating turns the heater off and restores the user target. The release switch always starts **Off** after a Home Assistant restart; startup sends no commands to the spa. If Home Assistant restarts while PV heating owns the heater, the spa may remain armed until it is turned off explicitly.
 
