@@ -106,7 +106,8 @@
       "power_pump_high": { "name": "Pump high power" },
       "power_heating": { "name": "Heating power" },
       "power_ozone": { "name": "Ozone power" },
-      "power_light": { "name": "Light power" }
+      "power_light": { "name": "Light power" },
+      "power_blower": { "name": "Blower power" }
     },
     "fan": {
       "jets": { "name": "Jets" },

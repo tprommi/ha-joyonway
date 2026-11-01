@@ -116,7 +116,8 @@
       "power_pump_high": { "name": "Moc dysz wysoka" },
       "power_heating": { "name": "Moc grzania" },
       "power_ozone": { "name": "Moc ozonowania" },
-      "power_light": { "name": "Moc oświetlenia" }
+      "power_light": { "name": "Moc oświetlenia" },
+      "power_blower": { "name": "Moc dmuchawy" }
     },
     "time": {
       "heat_slot1_start": { "name": "Początek przedziału ogrzewania 1" },

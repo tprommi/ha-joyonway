@@ -13,6 +13,7 @@ from homeassistant.const import UnitOfPower
 
 from .const import (
     OPT_POWER_HEATING,
+    OPT_POWER_BLOWER,
     OPT_POWER_LIGHT,
     OPT_POWER_OZONE,
     OPT_POWER_PUMP_HIGH,
@@ -30,6 +31,7 @@ POWER_SETTINGS: tuple[tuple[str, str, int], ...] = (
     (OPT_POWER_HEATING, "heating", 2780),
     (OPT_POWER_OZONE, "ozone", 20),
     (OPT_POWER_LIGHT, "light", 5),
+    (OPT_POWER_BLOWER, "blower", 400),
 )
 
 POWER_DEFAULTS: dict[str, int] = {
@@ -71,6 +73,7 @@ class CalculatedPowerSensor(JoyonwayCoordinatorEntity, SensorEntity):
         heating = data.get("heater_active") is True
         ozone = data.get("ozone_active") is True
         light = data.get("light_active") is True
+        blower = data.get("blower_active") is True
 
         pump_power = (
             watts[OPT_POWER_PUMP_HIGH]
@@ -84,4 +87,5 @@ class CalculatedPowerSensor(JoyonwayCoordinatorEntity, SensorEntity):
             + (watts[OPT_POWER_HEATING] if heating else 0)
             + (watts[OPT_POWER_OZONE] if ozone else 0)
             + (watts[OPT_POWER_LIGHT] if light else 0)
+            + (watts[OPT_POWER_BLOWER] if blower else 0)
         )

@@ -116,7 +116,8 @@
       "power_pump_high": { "name": "Puissance pompe haute" },
       "power_heating": { "name": "Puissance chauffage" },
       "power_ozone": { "name": "Puissance ozone" },
-      "power_light": { "name": "Puissance éclairage" }
+      "power_light": { "name": "Puissance éclairage" },
+      "power_blower": { "name": "Puissance du souffleur" }
     },
     "time": {
       "heat_slot1_start": { "name": "Chauffage créneau 1 début" },

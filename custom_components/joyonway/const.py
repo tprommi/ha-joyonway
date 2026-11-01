@@ -17,6 +17,7 @@ OPT_POWER_PUMP_HIGH: str = "power_pump_high"
 OPT_POWER_HEATING: str = "power_heating"
 OPT_POWER_OZONE: str = "power_ozone"
 OPT_POWER_LIGHT: str = "power_light"
+OPT_POWER_BLOWER: str = "power_blower"
 
 # Option values
 OZONE_MODE_AUTO: str = "auto"

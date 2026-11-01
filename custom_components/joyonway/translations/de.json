@@ -186,7 +186,8 @@
       "power_pump_high": { "name": "Leistung Düsen hoch" },
       "power_heating": { "name": "Heizleistung" },
       "power_ozone": { "name": "Ozonleistung" },
-      "power_light": { "name": "Lichtleistung" }
+      "power_light": { "name": "Lichtleistung" },
+      "power_blower": { "name": "Blower-Leistung" }
     },
     "time": {
       "heat_slot1_start": {

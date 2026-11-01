@@ -140,6 +140,7 @@ These entities allow managing the schedules and operating modes of the spa:
 | **Heating power** | Number | Estimated watts while heating is active (default: 2780 W) |
 | **Ozone power** | Number | Estimated watts while ozone is active (default: 20 W) |
 | **Light power** | Number | Estimated watts while the light is active (default: 5 W) |
+| **Blower power** | Number | Estimated watts while the blower is active (default: 400 W) |
 
 The calculated power is an estimate based on these configurable component values, not a measured electrical reading. The defaults match the former Home Assistant template calculation.
 
