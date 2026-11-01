@@ -430,6 +430,33 @@ def test_revoking_pv_release_disarms_heater_without_changing_user_thermostat() -
     ) == coordinator.adapter.build_heater_command(on=False)
 
 
+def test_pv_target_never_replaces_user_thermostat_target_after_release() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    coordinator.pv_heating = pv
+    climate = SpaClimate(coordinator, coordinator.entry)
+    pv.set_setpoint(40)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    assert climate.target_temperature == 32
+
+    pv.on_broadcast()
+    pv.set_release(False)
+    assert climate.target_temperature == 32
+
+    # A delayed acknowledgement of the PV write must not become the user's target.
+    coordinator.data["setpoint"] = 40
+    pv.on_broadcast()
+    assert pv.user_setpoint == 32
+    assert climate.target_temperature == 32
+
+    # A subsequent change on the pool display is a user change.
+    coordinator.data["setpoint"] = 35
+    pv.on_broadcast()
+    assert pv.user_setpoint == 35
+    assert climate.target_temperature == 35
+
+
 @pytest.mark.parametrize(
     ("heater_enabled", "mode", "connected"),
     [(True, "manual", True), (False, "auto", True), (False, "manual", False)],
