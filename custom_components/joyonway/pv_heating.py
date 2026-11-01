@@ -13,6 +13,7 @@ from homeassistant.components.number import NumberDeviceClass, NumberEntity
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import UnitOfTemperature, UnitOfTime
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.entity import EntityCategory
 
 from .entity import JoyonwayCoordinatorEntity, device_info
 
@@ -274,6 +275,7 @@ class PVHeatingReleaseSwitch(JoyonwayCoordinatorEntity, SwitchEntity):
     """External process grants or revokes PV surplus permission."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_translation_key = "pv_heating_release"
     _attr_icon = "mdi:transmission-tower"
 
@@ -350,6 +352,7 @@ class PVHeatingDelay(JoyonwayCoordinatorEntity, NumberEntity):
     """Configurable delay before accepting or revoking PV release."""
 
     _attr_has_entity_name = True
+    _attr_entity_category = EntityCategory.CONFIG
     _attr_device_class = NumberDeviceClass.DURATION
     _attr_native_unit_of_measurement = UnitOfTime.SECONDS
     _attr_native_min_value = 0
