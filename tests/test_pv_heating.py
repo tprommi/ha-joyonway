@@ -66,6 +66,31 @@ def test_pv_never_sends_on_startup(heater_enabled: bool) -> None:
     assert coordinator.intent_queue.commands == []
 
 
+@pytest.mark.parametrize("user_enabled", [False, True, None])
+def test_disabling_pv_after_restart_respects_user_thermostat(
+    user_enabled: bool | None,
+) -> None:
+    coordinator = FakeCoordinator(heater_enabled=True)
+    coordinator.entry.options = {
+        "pv_heating_enabled": True,
+        "pv_user_heater_enabled": user_enabled,
+    }
+    pv = PVHeatingController(coordinator)
+    assert coordinator.intent_queue.commands == []
+
+    pv.set_enabled(False)
+
+    if user_enabled is False:
+        assert [command[0] for command in coordinator.intent_queue.commands] == [
+            "heater"
+        ]
+        assert coordinator.intent_queue.commands[0][2](
+            {"heater_enabled": False}, coordinator.data
+        ) == coordinator.adapter.build_heater_command(on=False)
+    else:
+        assert coordinator.intent_queue.commands == []
+
+
 @pytest.mark.asyncio
 async def test_pv_release_delays_and_cancels_pending_change() -> None:
     coordinator = FakeCoordinator()
