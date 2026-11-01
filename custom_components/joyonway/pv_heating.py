@@ -47,6 +47,7 @@ class PVHeatingController:
         self.setpoint = options.get(OPT_PV_SETPOINT)
         self.user_setpoint = options.get(OPT_PV_USER_SETPOINT)
         self.user_enabled = options.get(OPT_PV_USER_ENABLED)
+        self._startup_heater_check_pending = True
 
     def _notify(self) -> None:
         self.coordinator.async_update_listeners()
@@ -169,6 +170,14 @@ class PVHeatingController:
 
     def on_broadcast(self) -> None:
         """Recheck eligibility after a controller state change or reconnect."""
+        if self._startup_heater_check_pending and self.coordinator.data is not None:
+            heater_enabled = self.coordinator.adapter.is_heater_enabled(
+                self.coordinator.data
+            )
+            if heater_enabled is not None:
+                self._startup_heater_check_pending = False
+                if self.user_enabled is False and heater_enabled:
+                    self._submit_heater(False)
         if self.active or (self.enabled and self.released):
             self._reconcile()
         if (
