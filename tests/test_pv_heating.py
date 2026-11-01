@@ -184,6 +184,26 @@ def test_pv_heater_confirmation_keeps_pv_ownership() -> None:
     assert coordinator.entry.options["pv_heating_owned"] is True
 
 
+def test_heater_armed_by_pv_setpoint_keeps_pv_ownership() -> None:
+    coordinator = FakeCoordinator()
+    pv = PVHeatingController(coordinator)
+    pv.set_setpoint(38)
+    pv.set_enabled(True)
+    pv.set_release(True)
+    pv.on_broadcast()
+    assert pv.active
+
+    # The spa may arm the heater as a side effect of accepting the PV target,
+    # before the integration's separate heater-on intent is sent.
+    coordinator.data["setpoint"] = 38
+    coordinator.data["heater_enabled"] = True
+    pv.on_broadcast()
+
+    assert pv.active
+    assert pv.user_enabled is False
+    assert coordinator.entry.options["pv_heating_owned"] is True
+
+
 def test_display_heater_off_allows_pv_to_take_over_again() -> None:
     coordinator = FakeCoordinator(heater_enabled=True)
     coordinator.entry.options = {"pv_user_heater_enabled": True}
